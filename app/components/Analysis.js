@@ -509,24 +509,16 @@ export function Analysis(props) {
     </div>
 
     {tool != "PCA" ||
-    <div>
-    <div>Contact</div>
-        <h2>a.haleem@fz-juelich.de</h2>
+        <div>
         <p>under construction</p>
         </div>
     }
 
-    {tool != "LD analysis" ||
-    <div>
-    <div>Contact</div>
-        <h2>a.haleem@fz-juelich.de</h2>
+    {tool != "LD_Analysis" ||
+      <div>
         <p>under construction</p>
-        </div>
+      </div>
     }
-
-    LD analysis
-
-
     <Head>
         <script src="/wasm/plink.js" /> {/* Add the script tag to the head */}
     </Head>
