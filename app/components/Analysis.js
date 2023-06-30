@@ -346,7 +346,7 @@ export function Analysis(props) {
     >
       <Paper variant="outlined" >
         <Typography variant = 'h5'> Usage
-          <Typography>  
+          <Typography sx={{marginLeft:2}}>  
               {parse(toolsUsage)}
           </Typography>
         </Typography>   
@@ -507,6 +507,25 @@ export function Analysis(props) {
         </div>
       }
     </div>
+
+    {tool != "PCA" ||
+    <div>
+    <div>Contact</div>
+        <h2>a.haleem@fz-juelich.de</h2>
+        <p>under construction</p>
+        </div>
+    }
+
+    {tool != "LD analysis" ||
+    <div>
+    <div>Contact</div>
+        <h2>a.haleem@fz-juelich.de</h2>
+        <p>under construction</p>
+        </div>
+    }
+
+    LD analysis
+
 
     <Head>
         <script src="/wasm/plink.js" /> {/* Add the script tag to the head */}

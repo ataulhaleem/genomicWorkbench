@@ -9,7 +9,7 @@ import './carousel.css'; // Import the custom CSS file
 import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
-// import  Footer  from './Footer';
+import  Footer  from './Footer';
 
 const components = [
   {
@@ -109,10 +109,10 @@ function WelcomePage() {
       <Typography align='center' variant='h5'>Wilhelm-Johnen-Straße 52428 Jülich</Typography>
       <Typography align='center' color="blue" variant='h6'>< a href="https://www.fz-juelich.de/en/ibg/ibg-4/about-us">vist our home page</a></Typography>
     </div>
-{/* 
+
     <div >
       <Footer/>
-    </div> */}
+    </div>
 
 
 

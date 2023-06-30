@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
-import { MDBFooter, MDBContainer, MDBRow, MDBCol, MDBIcon } from 'mdbreact-ui-kit';
-import React from 'react';
+// import { MDBFooter, MDBContainer, MDBRow, MDBCol, MDBIcon } from 'mdbreact-ui-kit';
 import { MDBFooter, MDBContainer, MDBRow, MDBCol, MDBIcon } from 'mdbreact';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css'
 import "@fortawesome/fontawesome-free/css/all.min.css"
@@ -25,15 +24,15 @@ const Footer = () => {
   ];
 
   return (
-    <MDBFooter >
+    <MDBFooter bgColor='light' className='text-center text-lg-start text-muted'>
       <section className='d-flex justify-content-center justify-content-lg-between p-4 border-bottom'>
-        <div>
+        <div className='me-5 d-none d-lg-block'>
           <span>Get connected with us on social networks:</span>
         </div>
 
         <div>
           {socialIcons.map((socialIcon, index) => (
-            <a key={index} href={socialIcon.href}>
+            <a key={index} href={socialIcon.href} className='me-4 text-reset'>
               <MDBIcon color='secondary' fab icon={socialIcon.icon} />
             </a>
           ))}
@@ -41,11 +40,11 @@ const Footer = () => {
       </section>
 
       <section>
-        <MDBContainer >
+        <MDBContainer className='text-center text-md-start mt-5' >
           <MDBRow className='mt-3'>
-            <MDBCol md='3' lg='4' xl='3' >
-              <h6 className='text-uppercase fw-bold mb-4'>
-                <MDBIcon color='secondary' icon='gem' className='me-3' />
+            <MDBCol  md="3" lg="4" xl="3" className='mx-auto mb-4' >
+              <h6  className='text-uppercase fw-bold mb-4'>
+                <MDBIcon icon="gem" className="me-3" />
                 IBG4@Forschungszentrum Jülich GmbH
               </h6>
               <p>
@@ -57,17 +56,17 @@ const Footer = () => {
             <MDBCol md='2' lg='2' xl='2' className='mx-auto mb-4'>
               <h6 className='text-uppercase fw-bold mb-4'>Other Tools</h6>
               <p>
-                <a href='https://www.plabipd.de/mercator_main.html' className='text-reset'>
+                <a href='https://www.plabipd.de/mercator_main.html' className='me4 me4 text-reset'>
                   Mercator
                 </a>
               </p>
               <p>
-                <a href='https://www.plabipd.de/mapman_main.html' className='text-reset'>
+                <a href='https://www.plabipd.de/mapman_main.html' className='me4 me4 text-reset'>
                   MapMan
                 </a>
               </p>
               <p>
-                <a href='https://usadellab.github.io/GeneExpressionPlots/#/plots' className='text-reset'>
+                <a href='https://usadellab.github.io/GeneExpressionPlots/#/plots' className='me4 me4 text-reset'>
                   GXP
                 </a>
               </p>
@@ -76,16 +75,16 @@ const Footer = () => {
             <MDBCol md='3' lg='2' xl='2' className='mx-auto mb-4'>
               <h6 className='text-uppercase fw-bold mb-4'>Useful links</h6>
               <p>
-                <a href='https://www.fz-juelich.de/en/ibg/ibg-4' className='text-reset'>
+                <a href='https://www.fz-juelich.de/en/ibg/ibg-4' className='me4 me4 text-reset'>
                   Home Page
                 </a>
               </p>
               <p>
                 Plabipd database
-                <a href='https://www.plabipd.de/query_view.ep' className='text-reset'>
+                <a href='https://www.plabipd.de/query_view.ep' className='me4 text-reset'>
                 </a>
               </p>
-              <p className='text-reset'>Plant Genomes</p>
+              <p className='me4 text-reset'>Plant Genomes</p>
               <ol>
                 <li>
                   <a href='https://www.plabipd.de/project_solanum/solanum_main.html'>
@@ -99,7 +98,7 @@ const Footer = () => {
                 </li>
               </ol>
               <p>
-                <a href='#!' className='text-reset'>
+                <a href='#!' className='me4 text-reset'>
                   Help
                 </a>
               </p>
@@ -128,7 +127,7 @@ const Footer = () => {
 
       <div className='text-center p-4' style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
         © 2023 All rights reserved:
-        <a className='text-reset fw-bold' href='https://mdbootstrap.com/'>
+        <a className='me4 text-reset fw-bold' href='https://mdbootstrap.com/'>
           ibg4@fz-juelich.de
         </a>
       </div>

@@ -2,28 +2,32 @@
     "visPheno": {
         "id" :"VisPheno",
         "description" : "this is visPheno usage documentation",
-        "usage" : "The usage will come here"
+        "usage" : "<ol><li>Select data</li><li>PARSE</li><li>Select plotting options</li><li>PLOT</li></ol><span><b>PUBLIC DATA</b> tab allow to use online resources and needs inertnet connection<br><b>OWN DATA </b> tab allows to choose data on you device<br><b>PROJECT DATA</b> tab allows you access data on the backend </span>"
     },
     "Fastqc": {
         "id" : "Fastqc",
         "description" : "this is Fastqc usage documentation",
-        "usage" : "The usage will go here"
+        "usage" : "<ol><li>Select data</li> </ol>"
 
     },
     "LD_Analysis": {
         "id" : "LD analysis",
         "description" : "this is LD_Analysis usage documentation",
-        "usage" : "The usage will come here"
+        "usage" : "<ol><li>Select data</li> </ol>"
+
     },
     "GWAS": {
         "id" : "GWAS",
         "description" : "this is GWAS usage documentation",
-        "usage" : "The usage will come here"
+        "usage" : "<ol><li>Select data from PUBLIC DATA tab </li><li>PARSE</li><li>PLOT PUBLIC DATA</li> </ol> <h5>OR</h5> <ol><li>Select data from OWN DATA tab</li><li>RUN GWAS TOOL</li></ol><span><b>PUBLIC DATA</b> tab allow to visualize GWAS results from public resources and needs inertnet connection<br><b>OWN DATA </b> tab allows to perform GWAS analyis using data on you device in plink format<br><b>PROJECT DATA</b> tab allows you to perform GWAS on the data stored on backend Minio Object Storage</span>"
 
     },
     "PCA" : {
         "id" : "PCA",
         "description" : "this is the pca usage documentation",
-        "usage" : "The usage will come here"
+        "usage" : "<ol><li>Select data</li> </ol>"
+
+
+
     }
 }

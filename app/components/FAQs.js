@@ -4,7 +4,9 @@ export function FAQs() {
   return (
       <>
         <div>FAQs</div>
-        <h2>Alena Karaoke 2</h2>
+        <div>Contact</div>
+        <h2>a.haleem@fz-juelich.de</h2>
+        <p>under construction</p>
       </>
     
   )

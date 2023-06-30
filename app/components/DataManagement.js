@@ -15,7 +15,7 @@ import { minioClient, createProject, listObjectsInFolder } from '/minioClient/he
 // stream.on('data', function(obj) { console.log(obj) } );
 // stream.on('error', function(err) { console.log(err) } );
 
-console.log(listObjectsInFolder('mydata2', 'Pheno'));
+// console.log(listObjectsInFolder('mydata2', 'Pheno'));
 
 // var size = 0
 // minioClient.getObject('modem', 'Pheno/Agri_traits.csv', function(err, dataStream) {
