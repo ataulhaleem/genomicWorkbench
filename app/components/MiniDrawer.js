@@ -15,6 +15,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItem from '@mui/material/ListItem';
+import HomeIcon from '@mui/icons-material/Home';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
@@ -29,14 +30,9 @@ import { DataManagement } from './DataManagement';
 import { Tools } from './Tools';
 import { FAQs } from './FAQs';
 import { Contact } from './Contact';
-import { Analysis } from './Analysis';
 import { UserContext } from './contexts';
 import { useContext } from 'react';
-
-
 import  WelcomePage  from "./WelcomePage";
-
-
 
 const drawerWidth = 240;
 
@@ -105,21 +101,14 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
+
 export function MiniDrawer() {
 
   const homePage = <WelcomePage/>;
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const [content, setContent] = React.useState(homePage);
-  const [tool, setTool] = React.useState(null);
-
   const [appBarTitle, setAppBarTitle] = React.useState("Genomics data Analysis workbench");
-
-  // const [result, setResult] = React.useState(null);
-  
-  // const [tool, setTool] = React.useState("");
-  // const newTool = useContext(UserContext)
-
 
   const newContent = useContext(UserContext);
   
@@ -131,40 +120,36 @@ export function MiniDrawer() {
     setOpen(false);
   };
 
-  const handleDrawerContent = (e) => {
-    if(e.target.id == 'Documentation'){
+  const handleDrawerContent = (text) => {
+    if(text == 'Documentation'){
       var newContent = <Documentation/>;
-    }else if(e.target.id == 'Data Management'){
+    }else if(text == 'Data Management'){
       var newContent = <DataManagement/>;
-    }else if(e.target.id == 'Tools'){
+    }else if(text== 'Tools'){
       var newContent = <Tools/>;
-    }else if(e.target.id == 'Analysis'){
-      var newContent = <Analysis/>;
-    }else if(e.target.id == 'FAQs'){
+    }else if(text== 'FAQs'){
       var newContent = <FAQs/>;
-    }else if(e.target.id == 'Contact'){
+    }else if(text== 'Contact'){
       var newContent = <Contact/>;
-    }else if(e.target.id == 'Home'){
+    }else if(text== 'Home'){
       var newContent = <WelcomePage/>;
 
     } 
   setContent(newContent);
 }
 
-  const handleAppBarTitle = (e) => {
-    if(e.target.id == 'Documentation'){
+  const handleAppBarTitle = (text) => {
+    if(text== 'Documentation'){
       var newAppBarTitle = <h3>Documentation</h3>;
-    } else if(e.target.id == 'Data Management'){
+    } else if(text== 'Data Management'){
       var newAppBarTitle = <h3>Data Management</h3>;
-    } else if(e.target.id == 'Tools'){
+    } else if(text== 'Tools'){
       var newAppBarTitle = <h3>Data Analysis Tools</h3>;
-    }else if(e.target.id == 'Analysis'){
-      var newAppBarTitle = <h3>Data Analysis and Visualization</h3>;
-    }else if(e.target.id == 'FAQs'){
+    }else if(text== 'FAQs'){
       var newAppBarTitle = <h3>FAQs</h3>;
-    }else if(e.target.id == 'Contact'){
+    }else if(text== 'Contact'){
       var newAppBarTitle = <h3>Contact</h3>;
-    }else if(e.target.id == 'Home'){
+    }else if(text== 'Home'){
       var newAppBarTitle = <h3>Home</h3>;
     }
     setAppBarTitle(newAppBarTitle);
@@ -177,7 +162,6 @@ export function MiniDrawer() {
   return (
     <>
     <Box sx={{ display: 'flex' }}>
-
       <CssBaseline />
       <AppBar position="fixed" open={open}>
         <Toolbar>
@@ -199,38 +183,36 @@ export function MiniDrawer() {
         </Toolbar>
       </AppBar>
 
-
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </DrawerHeader>
+
         <Divider />
-        {/* onClick={(e) => {handleDrawerContent(e); handleAppBarTitle(e);}} */}
         <List>
           {
-            ['Home','Documentation', 'Data Management', 'Tools', 'Analysis', 'FAQs', 'Contact'].map((text, index) => (
-            <ListItem key={text} disablePadding sx={{ display: 'block' }} >
-             
-              <ListItemButton id={text} sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center',px: 2.5, }} 
-              onClick={(e) => {handleDrawerContent(e); handleAppBarTitle(e);}} 
+            ['Home','Documentation', 'Data Management', 'Tools', 'FAQs', 'Contact'].map((text, index) => (
+              <ListItem key={text} disablePadding sx={{ display: 'block' }}
+              onClick={() => {handleDrawerContent(text); handleAppBarTitle(text);}}
               >
+             
+              <ListItemButton  sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center',  px: 2.5,  }} id={text}  >              
               
-                  <ListItemIcon  sx={{minWidth: 0, mr: open ? 1 : 'auto', justifyContent: 'center' }}>
-                    {index == 0 ? <TextSnippetIcon /> : ''}
-                    {index == 1 ? <TextSnippetIcon /> : ''}
-                    {index == 2 ? <StorageIcon /> : ''}
-                    {index == 3 ? <HandymanIcon /> : ''}
-                    {index == 4 ? <InsightsIcon /> : ''}
-                    {index == 5 ? <ContactSupportIcon /> : ''}
-                    {index == 6 ? <EmailIcon /> : ''}
-
+                  <ListItemIcon  sx={{ minWidth: 0,  mr: open ? 3 : 'auto', justifyContent: 'center' }} >
+                    {index != 0 || <HomeIcon />}
+                    {index != 1 || <TextSnippetIcon /> }
+                    {index != 2 || <StorageIcon /> }
+                    {index != 3 || <HandymanIcon /> }
+                    {index != 4 || <ContactSupportIcon />}
+                    {index != 5 || <EmailIcon /> }
                   </ListItemIcon>
+                  <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+
                   
-                  <ListItemText primary={text} sx={{ opacity: open ? 3 : 0 }} />
               </ListItemButton>
-            </ListItem>
+              </ListItem>
           ))
           }
         </List>
@@ -238,20 +220,12 @@ export function MiniDrawer() {
 
       </Drawer>
       
-        <UserContext.Provider value={{content, setContent}}>
+      <UserContext.Provider value={{content, setContent}}>
         <Box component="main" sx={{ flexGrow: 1, p: 3}}>
         <DrawerHeader/>
-          
         { content }
-
-
-
         </Box>
-
-        </UserContext.Provider>
-
-
-
+      </UserContext.Provider>
     </Box>
 
 
