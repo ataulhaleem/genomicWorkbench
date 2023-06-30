@@ -3,6 +3,7 @@
 const nextConfig = {
   experimental: {
     appDir: true,
+    output: 'export'
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
