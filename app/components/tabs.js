@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { Autocomplete, Button, Input, InputBase } from '@mui/material';
 import { TextField } from '@mui/material';
-import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
+// import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
 import Paper from '@mui/material/Paper';
 
 function TabPanel(props) {
@@ -84,24 +84,24 @@ export default function FullWidthTabs(props) {
     createProject(newProjName, meta);
     alert(`Project "${newProjName}" created successfully`)
   }
-  const handleUpload = () => {
-    var objFileName = subdir + '/' + fileName.split('\\').slice(-1);
-    minioClient.putObject(selectedProj, objFileName, fileName, function(err, res) {
-      if (err) return console.log('err:', err)
-      console.log('File uploaded successfully:', res)
-    })
+//   const handleUpload = () => {
+//     var objFileName = subdir + '/' + fileName.split('\\').slice(-1);
+//     minioClient.putObject(selectedProj, objFileName, fileName, function(err, res) {
+//       if (err) return console.log('err:', err)
+//       console.log('File uploaded successfully:', res)
+//     })
 
- }
-  const hadleSetMetaData = (projectName) => {
-    // gets the meta data of existing projects
-    // console.log(projectName);
-    var stream = minioClient.extensions.listObjectsV2WithMetadata(projectName,'', true,'')
-    stream.on('data', function(obj) { 
-      setMetadata(obj.metadata)
-      // console.log(obj.name, obj.lastModified, obj.lastModified, obj.metadata)
-     } )
+//  }
+  // const hadleSetMetaData = (projectName) => {
+  //   // gets the meta data of existing projects
+  //   // console.log(projectName);
+  //   var stream = minioClient.extensions.listObjectsV2WithMetadata(projectName,'', true,'')
+  //   stream.on('data', function(obj) { 
+  //     setMetadata(obj.metadata)
+  //     // console.log(obj.name, obj.lastModified, obj.lastModified, obj.metadata)
+  //    } )
 
-  }
+  // }
 
   return (
     <Box sx={{ bgcolor: 'background.paper' }}>

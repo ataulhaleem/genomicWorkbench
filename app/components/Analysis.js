@@ -28,7 +28,7 @@ import parse from 'html-react-parser';
 
 import PlotlyPlots from './PlotlyPlots2';
 import ManhattanPlot from '../components/ManhattanPlot'
-import DataSelectionBar from './DataSelectionBar';
+// import DataSelectionBar from './DataSelectionBar';
 import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
 
 
@@ -399,7 +399,7 @@ export function Analysis(props) {
         </TabPanel>
         {/* second tab */}
         <TabPanel value="1">
-          <DataSelectionBar></DataSelectionBar>
+          {/* <DataSelectionBar></DataSelectionBar> */}
         </TabPanel>
         <TabPanel value="2">
           <div>
