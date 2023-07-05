@@ -30,11 +30,14 @@ import PlotlyPlots from './PlotlyPlots2';
 import ManhattanPlot from '../components/ManhattanPlot'
 import DataSelectionBar from './DataSelectionBar';
 import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
+import Gff3Reader from '../components/Gff3Reader'
 
 
 import publicPhenoDataSets from '/public/publicPhenoDataSets.json';
 import publicGwasDataSets from '/public/publicGwasDataSets.json';
 import documentation from '../components/documentation.json';
+import FastQC from './Fastqc';
+
 
 
 var docs = Object.values(documentation)
@@ -282,7 +285,6 @@ export function Analysis(props) {
     if(selected_plot_type == 'boxplot' || selected_plot_type == 'violin' || selected_plot_type == "raincloud" || selected_plot_type == "heatMap"){
       setOpen(true)
     }
-    handlePLOT();
   },[selected_plot_type])
 
   useEffect(() =>{
@@ -519,9 +521,14 @@ export function Analysis(props) {
         <p>under construction</p>
       </div>
     }
+
+    {/* <Gff3Reader url = {'https://plabipd.de/projects/ata/camelinagff3'}>This is gffreader</Gff3Reader>  This part does not work as proxy is also not allowed*/}
     <Head>
         <script src="/wasm/plink.js" /> {/* Add the script tag to the head */}
+        <script src="https://biowasm.com/cdn/v3/aioli.js"></script>
     </Head>
+
+    <FastQC url = {'ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR586/001/SRR5864351/SRR5864351_subreads.fastq.gz'}></FastQC>
 
     </>
   );
