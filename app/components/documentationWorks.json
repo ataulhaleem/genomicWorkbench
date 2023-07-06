@@ -25,5 +25,10 @@
         "id" : "PCA",
         "description" : "this is the pca usage documentation",
         "usage" : "The usage will come here"
+    },
+    "Fastp" : {
+        "id" : "Fastp",
+        "description" : "this is the pca usage documentation",
+        "usage" : "The usage will come here"
     }
 }

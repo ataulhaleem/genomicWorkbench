@@ -4,12 +4,6 @@
         "description" : "this is visPheno usage documentation",
         "usage" : "<ol><li>Select data</li><li>PARSE</li><li>Select plotting options</li><li>PLOT</li></ol><span><b>PUBLIC DATA</b> tab allow to use online resources and needs inertnet connection<br><b>OWN DATA </b> tab allows to choose data on you device<br><b>PROJECT DATA</b> tab allows you access data on the backend </span>"
     },
-    "Fastqc": {
-        "id" : "Fastqc",
-        "description" : "this is Fastqc usage documentation",
-        "usage" : "<ol><li>Select data</li> </ol>"
-
-    },
     "LD_Analysis": {
         "id" : "LD analysis",
         "description" : "this is LD_Analysis usage documentation",
@@ -27,7 +21,10 @@
         "description" : "this is the pca usage documentation",
         "usage" : "<ol><li>Select data</li> </ol>"
 
-
-
+    },
+    "Fastp" : {
+        "id" : "Fastp",
+        "description" : "this is the pca usage documentation",
+        "usage" :  "<ol><li>Select Public sequencing data</li><li>run FastP</li> </ol>"
     }
 }

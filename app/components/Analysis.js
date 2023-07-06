@@ -36,6 +36,7 @@ import Gff3Reader from '../components/Gff3Reader'
 import publicPhenoDataSets from '/public/publicPhenoDataSets.json';
 import publicGwasDataSets from '/public/publicGwasDataSets.json';
 import documentation from '../components/documentation.json';
+import publicFastqDataSets from '/public/publicFastqDataSets'
 import FastQC from './Fastqc';
 
 
@@ -43,6 +44,7 @@ import FastQC from './Fastqc';
 var docs = Object.values(documentation)
 var pPhenoDataSets = Object.values(publicPhenoDataSets)
 var pGwasDataSets = Object.values(publicGwasDataSets)
+var pFastqDataSets = Object.values(publicFastqDataSets)
 
 const isObjectEmpty = (objectName) => {
   return Object.keys(objectName).length === 0
@@ -82,6 +84,10 @@ export function Analysis(props) {
 
   /////////// hanlde Public Data Sets ////////////////////
   const [publicDataSets, setPublicDataSets] = useState([])
+  const [fastpReported, setFastpReported] = useState(false)
+  const [parseToggled, setParseToggled] = useState(false)
+
+
 
   const handlePublicDataSets = () => {
     var publicdataSets = [];
@@ -92,6 +98,11 @@ export function Analysis(props) {
       setPublicDataSets(publicdataSets)
     }else if(tool=="GWAS"){
       pGwasDataSets.map(item => {
+        publicdataSets.push(item.id)
+      })
+      setPublicDataSets(publicdataSets)
+    }else if(tool == "Fastp"){
+      pFastqDataSets.map(item => {
         publicdataSets.push(item.id)
       })
       setPublicDataSets(publicdataSets)
@@ -133,13 +144,22 @@ export function Analysis(props) {
     }
   },[data])
 
+
   useEffect(() => {
+
     handlePublicDataSets()
     handleUsage()
-    handleParse()
-    if(tool == "GWAS"){
-      loadPlink();
+
+
+    if(tool == "Fastp"){
+      setParseToggled(false)
+    }else{
+      handleParse()
+      if(tool == "GWAS"){
+        loadPlink();
+      }
     }
+
   }, [tool, url ])
 
   // perform GWAS
@@ -330,6 +350,10 @@ export function Analysis(props) {
 
   }
 
+  var handleFastpReported = () => {
+    setFastpReported(true)
+  }
+
 
   return (
     <>
@@ -383,6 +407,13 @@ export function Analysis(props) {
                                     if(item.id == v){
                                       setUrl(item.url)
                                     }})
+                                }else if(tool == "Fastp"){
+                                  pFastqDataSets.map(item => {
+                                    if(item.id == v){
+                                      setUrl(item.url)
+                                      setFastpReported(false)
+
+                                    }})
                                 }
               
                               }
@@ -416,9 +447,13 @@ export function Analysis(props) {
 
           {/* third tab */}
         </TabPanel>
-        <Button sx = {{ width: 500 , marginTop:2}} variant="outlined" onClick={handleParse} >
-                    <b>Parse</b>
-              </Button>
+
+        {!parseToggled || 
+                <Button sx = {{ width: 500 , marginTop:2}} variant="outlined" onClick={handleParse} >
+                <b>Parse</b>
+          </Button>
+
+        }
       </TabContext>
     </Box>
 
@@ -525,10 +560,32 @@ export function Analysis(props) {
     {/* <Gff3Reader url = {'https://plabipd.de/projects/ata/camelinagff3'}>This is gffreader</Gff3Reader>  This part does not work as proxy is also not allowed*/}
     <Head>
         <script src="/wasm/plink.js" /> {/* Add the script tag to the head */}
-        <script src="https://biowasm.com/cdn/v3/aioli.js"></script>
+        {/* <script src="https://biowasm.com/cdn/v3/aioli.js"></script> */}
     </Head>
 
-    <FastQC url = {'ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR586/001/SRR5864351/SRR5864351_subreads.fastq.gz'}></FastQC>
+    {tool != "Fastp"  || 
+    <div>
+    <Typography variant = "h4" sx={{marginTop:10}}> Fastp </Typography>
+    <Typography variant = "p" sx={{marginTop:10}}> Check the qualitly of your fastq data before and after trimming </Typography>
+    <Button  sx={{marginTop:5}} variant = 'contained' onClick={handleFastpReported}>
+    run fastp
+    </Button>
+
+
+    <Typography variant = "h4" sx={{marginTop:10}}> Summary Statistics (QC) </Typography>
+
+
+
+
+
+    </div>
+    
+
+
+     }
+     {!(tool == "Fastp") | !(fastpReported) ||    
+      <FastQC sx={{marginTop:10}} url = {url}></FastQC>}
+
 
     </>
   );

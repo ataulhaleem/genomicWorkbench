@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // output: 'export',
-  output: 'hybrid',
+  output: 'export',
+  // output: 'hybrid',
 
   experimental: {
     appDir: true,

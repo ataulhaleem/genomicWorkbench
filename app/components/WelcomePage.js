@@ -20,6 +20,13 @@ const components = [
     description = 'Visualize your phenotypic data' />
   },
   {
+    label: 'Fastp',
+    component: <CardTemplate
+        myImage = './fastp.png' 
+        title = 'Fastp' 
+        description = 'Analyze sequencing qualitly of FastQ data'/>
+  },
+  {
     label: 'PCA analysis',
     component: <CardTemplate
       myImage = './pca.png' 
@@ -83,7 +90,7 @@ function WelcomePage() {
         interval={autoplayInterval}
         transitionTime={500}
         swipeScrollTolerance={40}
-        stopOnHover={false}
+        stopOnHover={true}
         selectedItem={2}
         showThumbs={false}
         showStatus={false}

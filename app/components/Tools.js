@@ -31,17 +31,24 @@ export function Tools() {
         description = 'Principle component analysis '
         />
 
-        <CardTemplate
+      <CardTemplate
           myImage = './LDplot.png' 
         title = 'LD analysis' 
         description = 'Find correlations among genetic markers '
         />
 
-        <CardTemplate
+      <CardTemplate
         myImage = './gwas.jpg' 
         title = 'GWAS' 
         description = 'Minecraft Dungeons is '
         />
+
+      <CardTemplate
+        myImage = './fastp.png' 
+        title = 'Fastp' 
+        description = 'Analyze sequencing qualitly of FastQ data'/>
+  
+
 
 
     </Box>
