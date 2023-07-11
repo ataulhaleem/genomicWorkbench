@@ -284,25 +284,21 @@ export function Analysis(props) {
 
     })
   }
+
   const handleStateChange = (event) => {
 		setState({
-      ...state,
-      [event.target.name]: event.target.checked,
-    });
+      ...state,          
+    })
+
 	};
 
-  // const handleStateChange = (event) => {
-	// 	setState({
-  //     ...state,          
-  //   })
+    const handleClose = () => {
+        // handlePLOT();
+            setOpen(false);
+    
+        };
 
-	// };
-  const handleClose = () => {
-    handlePLOT();
-    setOpen(false);
-
-    };
-
+        
   const handleButtonClick = () => {
     inputFile.current.click();
   };
