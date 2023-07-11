@@ -52,6 +52,7 @@ export default function FastQC(props) {
     setSummaryBeforeFiltering(obj.summary.before_filtering)
     setSummaryAfterFiltering(obj.summary.after_filtering)
     setData([obj])
+    console.log(obj)
 
   }
 

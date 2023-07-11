@@ -31,7 +31,7 @@ const components = [
     component: <CardTemplate
       myImage = './pca.png' 
       title = 'PCA' 
-      description = 'Principle component analysis'/>,
+      description = 'Population stratification'/>,
   },
   {
     label: 'LD analysis',

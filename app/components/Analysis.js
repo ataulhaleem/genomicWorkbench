@@ -2,7 +2,7 @@
 "use client"
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { Autocomplete, TextField } from '@mui/material'
+import { Autocomplete, List, ListItem, TextField } from '@mui/material'
 import { Button } from '@mui/material';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -25,12 +25,14 @@ import { useState, useEffect } from 'react';
 import { useRef } from 'react';
 import Papa from "papaparse";
 import parse from 'html-react-parser';
+import Stack from '@mui/material/Stack';
+import { styled } from '@mui/material/styles';
+
 
 import PlotlyPlots from './PlotlyPlots2';
 import ManhattanPlot from '../components/ManhattanPlot'
 import DataSelectionBar from './DataSelectionBar';
 import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
-import Gff3Reader from '../components/Gff3Reader'
 
 
 import publicPhenoDataSets from '/public/publicPhenoDataSets.json';
@@ -38,6 +40,16 @@ import publicGwasDataSets from '/public/publicGwasDataSets.json';
 import documentation from '../components/documentation.json';
 import publicFastqDataSets from '/public/publicFastqDataSets'
 import FastQC from './Fastqc';
+
+
+
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'left',
+  color: theme.palette.text.secondary,
+}));
 
 
 
@@ -81,11 +93,13 @@ export function Analysis(props) {
   // const [isGwasRunning, setIsGwasRunning] = useState(false);
   const [gwasOnPubData, setGwasOnPubData] = useState(false)
 
+  const [mdsData, setMdsData] = useState(null)
+
 
   /////////// hanlde Public Data Sets ////////////////////
   const [publicDataSets, setPublicDataSets] = useState([])
   const [fastpReported, setFastpReported] = useState(false)
-  const [parseToggled, setParseToggled] = useState(false)
+  const [parseToggled, setParseToggled] = useState(true)
 
 
 
@@ -155,7 +169,7 @@ export function Analysis(props) {
       setParseToggled(false)
     }else{
       handleParse()
-      if(tool == "GWAS"){
+      if(tool == "GWAS" || tool == "PCA"){
         loadPlink();
       }
     }
@@ -228,13 +242,35 @@ export function Analysis(props) {
           true, // read
           true, // write
           );
+          // if(tool == "MDS"){
+          //   Module.callMain(["--bfile", "plink", "--Z-genome", "--out plink"])
+          //   Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome.gz", "--cluster", "--mds-plot 2"])
+
+          // }
           if(isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))){
-            Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
-            var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
+            
+            if(tool == "GWAS"){
+              Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+              if(isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))){
+                var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
+              }else if(isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))){
+                var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
+              }
+              const multiArray = parseQassoc(string, ' ');
+              var filteredArray = multiArray.filter((obj) => obj['P'] !== 'NA');
+              setPlinkResults(filteredArray); 
+              setIsToggledManhattan(true)
+          }else if(tool=="PCA"){
+            Module.callMain(["--bfile", "plink", "--genome"])
+            Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"])
+            console.log("Files After", Module.FS.readdir('.')) 
+            var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
             const multiArray = parseQassoc(string, ' ');
-            var filteredArray = multiArray.filter((obj) => obj['P'] !== 'NA');
-            setPlinkResults(filteredArray); 
-            setIsToggledManhattan(true)
+            setMdsData(multiArray)
+
+            // var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
+
+          }
 
           }
 
@@ -251,14 +287,8 @@ export function Analysis(props) {
 
   const handleStateChange = (event) => {
 		setState({
-      ...state,
-      [event.target.name]: event.target.checked,
-    });
-	};
-
-  const handleClose = () => {
-    handlePLOT();next
-		setOpen(false);
+      ...state,          
+    })
 
 	};
 
@@ -285,6 +315,7 @@ export function Analysis(props) {
 
   // setting up data public data sets
   const handleFileInputChange = () => {
+
     console.log("Numbr of files is ",inputFile.current.files.length)
     const file = inputFile.current.files[0];
     const reader = new FileReader();
@@ -302,7 +333,7 @@ export function Analysis(props) {
 
 
   useEffect(() =>{
-    if(selected_plot_type == 'boxplot' || selected_plot_type == 'violin' || selected_plot_type == "raincloud" || selected_plot_type == "heatMap"){
+    if(selected_plot_type == 'boxplot' || selected_plot_type == "line"|| selected_plot_type == 'violin' || selected_plot_type == "raincloud" || selected_plot_type == "heatMap"){
       setOpen(true)
     }
   },[selected_plot_type])
@@ -327,6 +358,9 @@ export function Analysis(props) {
 
     }else if(selected_plot_type === 'violin' ){
       plotSchema.ploty_type = 'violin'
+      plotSchema.variablesToPlot = Object.keys(state);
+    }else if(selected_plot_type === 'line' ){
+      plotSchema.ploty_type = 'line'
       plotSchema.variablesToPlot = Object.keys(state);
 
     }else if(selected_plot_type === 'raincloud'){
@@ -422,13 +456,6 @@ export function Analysis(props) {
 
 
 
-
-
-
-
-
-
-
         </TabPanel>
         {/* second tab */}
         <TabPanel value="1">
@@ -521,26 +548,47 @@ export function Analysis(props) {
 
       {tool != "GWAS" ||
         <div padding={2}> 
-          <Typography variant='h5' > Genome wide Association Analysis (GWAS)</Typography> 
 
-          <Grid sx = {{marginTop:2}} container columns={3} columnGap = {2}>
+        <Stack spacing={0}>
+          <Item>
+            <Typography variant='h5' > Genome wide Association Analysis (GWAS)</Typography> 
+          </Item>
+          <Item>
+            <Typography variant='h6' > 1. PUBLIC DATA: Explore legacy GWAS data sets </Typography> 
+            <Button variant = 'contained' onClick={() => {handleGwasPublic();}} color="primary">
+                  run gwas TOOL
+            </Button>
+          </Item>
 
-          <Button variant = 'contained' onClick={() => {handleGwasPublic();}} color="primary">
-              Plot public data
+          <Item>
+          <Typography variant='h6' > 2. Perform GWAS Analyis on you project data </Typography> 
+          <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
+              Run gwas Tool
             </Button>
 
 
-            <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
-              Run GWAS Tool
+          </Item>
+
+          <Item>
+          <Typography variant='h6' > 3. Perform GWAS Analyis on your local data </Typography> 
+          <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
+              Run gwas Tool
             </Button>
 
- 
-          </Grid>
-          
-          {/* {isGwasRunning ? <h1>Gwas is running </h1> : console.log('press run gwas')}  */}
-          {  !isToggledManhattan  || <ManhattanPlot inputArray = {plinkResults}/> }
+         </Item>
+         <Item>
+         {  !isToggledManhattan  || <div>
+          <Typography variant='h6' > Results </Typography> 
+          <ManhattanPlot inputArray = {plinkResults}/>
+          </div> }
+        {  !gwasOnPubData || <div>
+          <Typography variant='h5' > Results </Typography> 
+          <ManhattanPlot inputArray = {data}/> 
+        </div>}
+         </Item>
+        </Stack>
 
-          {  !gwasOnPubData || <ManhattanPlot inputArray = {data}/> }
+
         </div>
       }
     </div>
@@ -585,6 +633,21 @@ export function Analysis(props) {
      }
      {!(tool == "Fastp") | !(fastpReported) ||    
       <FastQC sx={{marginTop:10}} url = {url}></FastQC>}
+
+      {tool != "PCA" ||
+              <div padding={2}> 
+                <Typography variant='h5' > Population Stratification Scaling Analysis</Typography> 
+                <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
+                            perform MDS
+                          </Button>
+                {!mdsData ||                         
+                    <div>
+                      <Typography variant='h5' > 1. Multidimentional Scaling (MDS)</Typography> 
+                      <PlotlyPlots plotSchema={{ploty_type :"clustering", inputData : mdsData,  variablesToPlot: ["C1", "C2"], plotTitle : "Multidimentional Scaling", xLable : "PC1", yLable : "PC2"  } }/>
+                    </div>
+                }
+              </div>
+      }
 
 
     </>
