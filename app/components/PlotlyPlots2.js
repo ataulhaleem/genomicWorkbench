@@ -103,12 +103,12 @@ const PlotlyPlots = (props) => {
             // console.log(plotData)
 
             // var plotData=[{type : 'line', y:xdata} ];
-            // var plotLayout = primaryLaout;
-            // plotLayout['xaxis'] = {}
-            // plotLayout['yaxis'] = {}
-            // plotLayout.xaxis['title'] = xLable
-            // plotLayout.yaxis['title'] = yLable
-            // console.log('modify it for many variables')
+            var plotLayout = primaryLaout;
+            plotLayout['xaxis'] = {}
+            plotLayout['yaxis'] = {}
+            plotLayout.xaxis['title'] = xLable
+            plotLayout.yaxis['title'] = yLable
+            console.log('modify it for many variables')
     
         }else if(plotyType == 'histogram' ){
             var plotData=[{type : 'histogram', x:xdata} ];
@@ -144,6 +144,12 @@ const PlotlyPlots = (props) => {
                 })
             }
             var plotData = Object.values(input_Obj)  
+            var plotLayout = primaryLaout;
+            plotLayout['xaxis'] = {}
+            plotLayout['yaxis'] = {}
+            plotLayout.xaxis['title'] = xLable
+            plotLayout.yaxis['title'] = yLable
+            plotLayout.showlegend = true
     
         }else if(plotyType == 'violin' ){
             var input_Obj = {};
@@ -169,6 +175,13 @@ const PlotlyPlots = (props) => {
                 })
             }
             var plotData = Object.values(input_Obj)   
+            var plotLayout = primaryLaout;
+            plotLayout['xaxis'] = {}
+            plotLayout['yaxis'] = {}
+            plotLayout.xaxis['title'] = xLable
+            plotLayout.yaxis['title'] = yLable
+            plotLayout.showlegend = true
+
     
         } else if(plotyType == 'raincloud' ){
             var plotLayout = primaryLaout;
@@ -240,6 +253,14 @@ const PlotlyPlots = (props) => {
                     plotData.push(trace)
                 })
             })
+
+            plotLayout['xaxis'] = {}
+            plotLayout['yaxis'] = {}
+            plotLayout.xaxis['title'] = xLable
+            plotLayout.yaxis['title'] = yLable
+            plotLayout.showlegend = true
+
+
             }else if(plotyType == 'linReg' ){
             var regLineData = linReg(xdata,ydata);
             var plotData=[{type : 'scattergl', mode: 'markers',x:xdata, y:ydata},regLineData ];
@@ -248,7 +269,7 @@ const PlotlyPlots = (props) => {
             plotLayout['yaxis'] = {}
             plotLayout.xaxis['title'] = xLable
             plotLayout.yaxis['title'] = yLable
-            plotLayout.showlegend = false
+            plotLayout.showlegend = true
     
         } else if(plotyType == 'heatMap'){
     

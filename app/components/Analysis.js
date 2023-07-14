@@ -33,6 +33,8 @@ import PlotlyPlots from './PlotlyPlots2';
 import ManhattanPlot from '../components/ManhattanPlot'
 import DataSelectionBar from './DataSelectionBar';
 import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
+import { listObjectsInFolder } from '/minioClient/helper.js'
+
 
 
 import publicPhenoDataSets from '/public/publicPhenoDataSets.json';
@@ -78,22 +80,59 @@ export function Analysis(props) {
 	const [selectedYvar, setSelectedYvar] = useState('');
   
   const [open, setOpen] = useState(false);
-  const [isToggled, setIsToggled] = useState(false);
+  const [isToggled, setPlotIsToggled] = useState(false);
   const [plotSchema, setPlotSchema] = useState({})
   const [plotTitle, setPlotTitle] = useState("")
   const [xLable, setXlable] = useState("")
   const [yLable, setYlable] = useState("")
+  const [isMultiTrace, setIsMultiTrace] = useState(false)
 
   const [state, setState] = useState({});
   const [url, setUrl] = useState('');
 
 
   const [plinkResults, setPlinkResults] = useState([]);
-  const [isToggledManhattan, setIsToggledManhattan] = useState(false);
+  const [isToggledManhattan, setPlotIsToggledManhattan] = useState(false);
   // const [isGwasRunning, setIsGwasRunning] = useState(false);
   const [gwasOnPubData, setGwasOnPubData] = useState(false)
 
   const [mdsData, setMdsData] = useState(null)
+
+/////////////////// handle Minio data ////////////////////
+const [bucketList, setBucketList] = useState([]);
+const [chosenProject, setChosenProject]= React.useState('');
+const [chosenDataType, setchosenDataType]= React.useState('');
+const [chosenFile, setChosenFile] = React.useState('');
+const [inputFiles, setInputFiles] = React.useState([]);
+
+
+var inputDataTypes = [ "DNAmeth", "DNAseq", "Meta", "Pheno", "Plink", "RNAseq" ];
+
+
+useEffect(() => {
+  var newBuckets = []
+  minioClient.listBuckets(function(err, buckets) {
+    buckets.map((item, index) => (newBuckets.push(item.name))) 
+  });
+	setBucketList(newBuckets)
+},[])
+
+
+React.useEffect(() => {
+  fetchObjects();
+},[chosenProject,chosenDataType])
+
+const fetchObjects = async () => {
+  // console.log(chosenProject);
+  // console.log(chosenDataType);
+  const objectsList = [];
+  if(chosenProject != ''){
+    var stream = minioClient.listObjectsV2(chosenProject,chosenDataType, true,'')
+    stream.on('data', function(obj) { objectsList.push(obj.name) } )
+    stream.on('error', function(err) { console.log(err) } )
+    setInputFiles(objectsList);    
+  }
+}
 
 
   /////////// hanlde Public Data Sets ////////////////////
@@ -259,7 +298,7 @@ export function Analysis(props) {
               const multiArray = parseQassoc(string, ' ');
               var filteredArray = multiArray.filter((obj) => obj['P'] !== 'NA');
               setPlinkResults(filteredArray); 
-              setIsToggledManhattan(true)
+              setPlotIsToggledManhattan(true)
           }else if(tool=="PCA"){
             Module.callMain(["--bfile", "plink", "--genome"])
             Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"])
@@ -291,12 +330,7 @@ export function Analysis(props) {
     });
 	};
 
-  // const handleStateChange = (event) => {
-	// 	setState({
-  //     ...state,          
-  //   })
 
-	// };
   const handleClose = () => {
     handlePLOT();
     setOpen(false);
@@ -345,11 +379,18 @@ export function Analysis(props) {
 
   useEffect(() =>{
     if(selected_plot_type == 'boxplot' || selected_plot_type == "line"|| selected_plot_type == 'violin' || selected_plot_type == "raincloud" || selected_plot_type == "heatMap"){
+      setIsMultiTrace(true)
       setOpen(true)
+      var newState = {}
+      setState(newState)
+  
+    }else{
+      setIsMultiTrace(false)
     }
   },[selected_plot_type])
 
   useEffect(() =>{
+    setPlotSchema(plotSchema)
     handlePLOT();
   },[selectedXvar, selectedYvar, plotTitle, xLable, yLable])
 
@@ -390,8 +431,8 @@ export function Analysis(props) {
     setPlotSchema(plotSchema)
 
 
-    var newState = {}
-    setState(newState)
+    // var newState = {}
+    // setState(newState)
 
   }
 
@@ -468,10 +509,32 @@ export function Analysis(props) {
 
 
         </TabPanel>
-        {/* second tab */}
         <TabPanel value="1">
-          <DataSelectionBar></DataSelectionBar>
+          <Box sx={{display: 'flex', '& > :not(style)': {m: 1,width: '50%',border: 1.5, color: 'primary.main', boxShadow: 1 , padding : 0.5 }}}>
+                <Autocomplete
+              options={bucketList}
+              sx={{ width: 300 }}
+              renderInput={(params) => <TextField {...params} label="choose project" />}
+              onInputChange = {(e) => setChosenProject(e.target.innerHTML)}
+            />
+            <Autocomplete
+              options={inputDataTypes}
+              sx={{ width: 300 }}
+              renderInput={(params) => <TextField {...params} label="choose data type" />}
+              onInputChange = {(e) => setchosenDataType(e.target.innerHTML)}
+            />
+            <Autocomplete
+              options={inputFiles}
+              sx={{ width: 300 }}
+              renderInput={(params) => <TextField {...params} label="data files" />}
+              onInputChange = {(e) => setChosenFile(e.target.value)}
+            />
+            </Box>
+
         </TabPanel>
+
+
+
         <TabPanel value="2">
           <div>
             <Grid sx = {{ width: 500 , marginTop:2}} container columns={2} columnGap = {2}>  
@@ -494,46 +557,71 @@ export function Analysis(props) {
         }
       </TabContext>
     </Box>
-
     </Box>
-
+    
     {/* handle Tools + corresponding pages */}
     <div style={{padding : 20}}>
+
+      {/* //////////////////////// Visualize phenotypes /////////////////////////////////////////// */}
       {tool != "VisPheno" || 
       
         <div >  
-          <Grid className="top-grid" container columns={3} columnGap = {2}>
+          <Grid className="top-grid" container columns={2} columnGap = {2}>
             <Autocomplete
               options={['bar','line', 'histogram', 'boxplot', 'scatter', 'linReg','violin', 'raincloud']}
               sx={{ width: 300 }}
               renderInput={(params) => <TextField {...params} label="choose plot type" />}
-              onInputChange = {(e) => setSelectedPlotType(e.target.innerHTML)}
+              onInputChange = {(e, v) => setSelectedPlotType(v)}
             />
-            {open || <Autocomplete
-              options={col_names}
-              sx={{ width: 300 }}
-              renderInput={(params) => <TextField {...params} label="choose x-variable" />}
-              onInputChange = {(e) => setSelectedXvar(e.target.innerHTML)}
-            />
-            }
-            { selected_plot_type == 'histogram' | selected_plot_type == 'line' || 
-            <Autocomplete
-              options={col_names}
-              sx={{ width: 300 }}
-              renderInput={(params) => <TextField {...params} label="choose y-variable" />}
-              onInputChange = {(e) => setSelectedYvar(e.target.innerHTML)}
-            />
-            }
-            <Button variant="outlined" onClick={() => {setIsToggled(true)}}>Plot</Button>
+            <Button variant="contained" onClick={() => {setPlotIsToggled(true)}}>Plot</Button>
+            </Grid>
+
+          <Grid className="top-grid" container columns={3} columnGap = {2}>
+
+        {isMultiTrace ? "" : 
+
+                    <Grid sx = {{marginTop:2}} className="top-grid" container columns={2} columnGap = {2}>
+
+                    { selected_plot_type == 'histogram'  ?  
+                                      <Autocomplete
+                                        options={col_names}
+                                        sx={{ width: 300 }}
+                                        renderInput={(params) => <TextField {...params} label="choose x-variable" />}
+                                        onInputChange = {(e) => setSelectedXvar(e.target.innerHTML)}
+                                      />
+                                      :   
+                                      <Grid sx = {{marginTop:2}} className="top-grid" container columns={2} columnGap = {2}>
+                                        <Autocomplete
+                                          options={col_names}
+                                          sx={{ width: 300 }}
+                                          renderInput={(params) => <TextField {...params} label="choose x-variable" />}
+                                          onInputChange = {(e) => setSelectedXvar(e.target.innerHTML)}
+                                        />
+                                        <Autocomplete
+                                          options={col_names}
+                                          sx={{ width: 300 }}
+                                          renderInput={(params) => <TextField {...params} label="choose y-variable" />}
+                                          onInputChange = {(e) => setSelectedYvar(e.target.innerHTML)}
+                                        />
+                                      </Grid>
+                                }
+
+
+
+                    </Grid>
+        }
+
+<Grid sx = {{marginTop:2}} className="top-grid" container columns={3} columnGap = {2}>
+                      <TextField sx={{ width: 300 }} onChange={(e) => {setPlotTitle(e.target.value)}} label="Update  plot title" ></TextField>
+                      <TextField sx={{ width: 300 }} onChange={(e) => {setXlable(e.target.value)}} label="Update  x label " ></TextField>
+                      <TextField sx={{ width: 300 }} onChange={(e) => {setYlable(e.target.value)}} label="Update  y label " ></TextField>
+                    </Grid> 
+
+
+        
           </Grid>
           
 
-          <Grid sx = {{marginTop:2}} className="top-grid" container columns={3} columnGap = {2}>
-            <TextField sx={{ width: 300 }} onChange={(e) => {setPlotTitle(e.target.value)}} label="Update  plot title" ></TextField>
-            <TextField sx={{ width: 300 }} onChange={(e) => {setXlable(e.target.value)}} label="Update  x label " ></TextField>
-            <TextField sx={{ width: 300 }} onChange={(e) => {setYlable(e.target.value)}} label="Update  y label " ></TextField>
-          </Grid>
-          
           {!isToggled || 
             <PlotlyPlots plotSchema = {plotSchema} />
           }
@@ -556,6 +644,8 @@ export function Analysis(props) {
           </Dialog>
         </div>
       }
+
+      {/* /////////////////////////// GWAS ////////////////////////////////////////////////////////// */}
 
       {tool != "GWAS" ||
         <div padding={2}> 
@@ -604,11 +694,8 @@ export function Analysis(props) {
       }
     </div>
 
-    {tool != "PCA" ||
-        <div>
-        <p>under construction</p>
-        </div>
-    }
+    {/* /////////////////////////// LD Analysis ///////////////////////////////////////////////////// */}
+
 
     {tool != "LD_Analysis" ||
       <div>
@@ -622,6 +709,10 @@ export function Analysis(props) {
         {/* <script src="https://biowasm.com/cdn/v3/aioli.js"></script> */}
     </Head>
 
+
+    {/* /////////////////////////// FastP //////////////////////////////////////////////////////////////// */}
+
+
     {tool != "Fastp"  || 
     <div>
     <Typography variant = "h4" sx={{marginTop:10}}> Fastp </Typography>
@@ -633,19 +724,15 @@ export function Analysis(props) {
 
     <Typography variant = "h4" sx={{marginTop:10}}> Summary Statistics (QC) </Typography>
 
-
-
-
-
     </div>
     
-
-
      }
      {!(tool == "Fastp") | !(fastpReported) ||    
       <FastQC sx={{marginTop:10}} url = {url}></FastQC>}
 
-      {tool != "PCA" ||
+
+    {/* /////////////////////////// PCA //////////////////////////////////////////////////////////////////////// */}
+    {tool != "PCA" ||
               <div padding={2}> 
                 <Typography variant='h5' > Population Stratification Scaling Analysis</Typography> 
                 <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">

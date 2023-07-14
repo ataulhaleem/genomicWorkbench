@@ -3,12 +3,8 @@
 // // import Minio from 'minio-js/dist/main/minio.js'
 // import Iframe from "react-iframe";
 // var Minio = require("minio");
-import ReadString from './papa'
-import Papa from 'papaparse';
-import IconTabs from './iconTabs'
 import TabPanel from './tabs'
-import { Typography } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { minioClient, createProject, listObjectsInFolder } from '/minioClient/helper.js'
 
 // var stream = minioClient.listObjectsV2('modem','', true,'');
@@ -70,14 +66,6 @@ import { minioClient, createProject, listObjectsInFolder } from '/minioClient/he
 
 
 
-var bucketList = [];
-minioClient.listBuckets(function(err, buckets) {
-
-  if(!bucketList){
-      buckets.map((item, index) => (bucketList.push(item.name)))
-  }
-  // console.log(buckets)
-});
 
 // var stream = minioClient.extensions.listObjectsV2WithMetadata('modem','', true,'')
 // stream.on('data', function(obj) { console.log(obj) } )
@@ -86,7 +74,19 @@ minioClient.listBuckets(function(err, buckets) {
 // createProject('salma5');
 
 export function DataManagement() {
-  // const [bucketList, setBucketList] = useState([]);
+  const [bucketList, setBucketList] = useState([]);
+
+  useEffect(() => {
+    var newBuckets = []
+    minioClient.listBuckets(function(err, buckets) {
+      buckets.map((item, index) => (newBuckets.push(item.name)))
+      setBucketList(newBuckets)
+    });
+  },[bucketList])
+
+
+
+
 
 //   minioClient.listBuckets(function(err, buckets) {
 //     var newBucketList = [];
