@@ -53,7 +53,7 @@ const nextConfig = {
     return config;
   },
   // Add the following line to enable CSS support
-  cssModules: true,
+  // cssModules: true,
 };
 
 module.exports = nextConfig;

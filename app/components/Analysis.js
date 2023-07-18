@@ -49,7 +49,7 @@ const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
   padding: theme.spacing(1),
   textAlign: 'left',
-  color: theme.palette.text.secondary,
+  color: theme.palette.text.primary,
 }));
 
 var docs = Object.values(documentation)
@@ -107,7 +107,8 @@ const [chosenFile, setChosenFile] = React.useState('');
 const [inputFiles, setInputFiles] = React.useState([]);
 const [minioGwasUrls, setMinioGwasUrls] = useState({})
 const [plinkFiles, setPlinkFiles] = useState({})
-const [plinkMinioFiles, setPlinkMinioFiles] = useState([])
+const [waitMsg, setWaitMsg] = useState("")
+
 
 var inputDataTypes = [ "DNAmeth", "DNAseq", "Meta", "Pheno", "Plink", "RNAseq" ];
 useEffect(() => {
@@ -177,6 +178,11 @@ const handleMinioProjectData = () =>{
     });
     setMinioGwasUrls(gwasUrls)
     console.log(gwasUrls)
+  }else if(tool == "Fastp"){
+    console.log("This is under construction")
+    // minioClient.presignedGetObject(chosenProject, chosenFile, 24*60*60, function(err, presignedUrl) {
+    //     setUrl(presignedUrl)
+    //   })
   }
 }
 
@@ -261,108 +267,7 @@ const handleMinioProjectData = () =>{
     setGwasOnPubData(true)
   }
 
-// Import Plink or any other dependencies here, if required
 
-// const handleMinioGWAS = () => {
-//   console.log("Performing GWAS on data stored in Minio object Storage");
-//   console.log("The Selected project is:", chosenProject);
-//   console.log("The input files are:", plinkFiles.fam, plinkFiles.bed, plinkFiles.bim);
-
-//   var fam = minioGwasUrls.fam;
-//   var bim = minioGwasUrls.bim;
-//   var bed = minioGwasUrls.bed;
-//   var plinkInputFiles = [fam, bim, bed];
-//   var fileNames = ["plink.fam", "plink.bim", "plink.bed"];
-
-//   window.Plink().then(Module => {
-//     plinkInputFiles.map((url, index) => {
-//       fetch(url)
-//         .then(response => {
-//           if (index === 2) {
-//             // Binary file (bed)
-//             return response.blob();
-//           } else {
-//             var text = response.clone().text();
-//             return text
-//           }
-//         })
-//         .then(data => {
-//           const reader = new FileReader();
-//           reader.onload = (e) => {
-//             // const fileContents = new Uint8Array(e.target.result);
-//             if (index === 2) {
-//               // Binary file (bed)
-//               const reader = new FileReader();
-//               reader.onload = (e) => {
-//                 const fileContents = e.target.result;
-//                 Module.FS_createDataFile(
-//                   "/", // folder
-//                   fileNames[index], // filename
-//                   fileContents, // content
-//                   true, // read
-//                   true // write
-//                 );
-//                 console.log(Module.FS.readdir('.'));
-//                 if (isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))) {
-//                   console.log(Module.FS.readdir('.'));
-//                   console.log("Tool is : ",tool)
-//                   console.log("This is correct data", isMinioData)
-      
-//                     if (tool == "GWAS" && isMinioData) {
-//                       Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex"]);
-//                       if (isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))) {
-//                         var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
-//                       } else if (isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))) {
-//                         var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
-//                       }
-//                       console.log(string)
-//                       const multiArray = parseQassoc(string, ' ');
-//                       var filteredArray = multiArray.filter(obj => obj['P'] !== 'NA');
-//                       setPlinkResults(filteredArray);
-//                       setPlotIsToggledManhattan(true);
-//                     } else if (tool == "PCA" && isMinioData) {
-//                       Module.callMain(["--bfile", "plink", "--genome"]);
-//                       Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"]);
-//                       // console.log("Files After", Module.FS.readdir('.'));
-//                       var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
-//                       const multiArray = parseQassoc(string, ' ');
-//                       setMdsData(multiArray);
-//                     }
-//                   }
-//                 // Rest of your code...
-//               };
-//               reader.readAsBinaryString(data);
-//             } else {
-//               // Text files (fam, bim)
-//               const fileContents = data;
-//               console.log(fileContents)
-//               Module.FS_createDataFile(
-//                 "/", // folder
-//                 fileNames[index], // filename
-//                 fileContents, // content
-//                 true, // read
-//                 true // write
-//               );
-//             }
-//           };
-//           reader.readAsBinaryString(data);
-//         })
-//         .catch(error => {
-//           console.error('Error fetching file:', error);
-//         });
-
-//     });
-//   });
-// };
-
-
-// const handleMinioGWAS = () => {
-//   console.log("Performing GWAS on data stored in Minio object Storage");
-//   console.log("The Selected project is:", chosenProject);
-//   console.log("The input files are:", plinkFiles.fam, plinkFiles.bed, plinkFiles.bim);
-
-
-//     }
 
 // Helper function to check if an array is a subset of another array
 function isSubsetOf(subset, array) {
@@ -417,8 +322,8 @@ function isSubsetOf(subset, array) {
     return resultArray;
   }
 
-  const handleGWAS = () => {
-
+  const handleGWAS = (e,v) => {
+    console.log(v)
     if(isOwnData){
       var analysisFiles = inputFile.current.files;
       window.Plink().then(Module => {
@@ -439,7 +344,15 @@ function isSubsetOf(subset, array) {
             );
             if(isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))){
               if(tool == "GWAS" ){
-                Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+                if(v == "without"){
+                  console.log("performing GWAS with out correction")
+                  Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+                }else{
+                  // Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+                  console.log("performing GWAS with correction")
+                }
+
+
                 if(isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))){
                   var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
                 }else if(isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))){
@@ -464,7 +377,6 @@ function isSubsetOf(subset, array) {
       })
     }else if(isMinioData){
       console.log("Reading data from your selected Minio project: ", chosenProject)
-
       window.Plink().then(Module => {
         var fam = minioGwasUrls.fam;
         var bim = minioGwasUrls.bim;
@@ -487,7 +399,22 @@ function isSubsetOf(subset, array) {
                 ); 
                 if(isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))){
                   if(tool == "GWAS" ){
-                    Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+
+
+                    if(v == "without"){
+                      console.log("performing GWAS with out correction")
+                      Module.callMain(["--bfile", "plink", "--maf", "0.05", "--mind", "0.1","--assoc", "--allow-no-sex" ])
+                    }else{
+                      Module.callMain(["--bfile", "plink", "--maf", "0.05", "--genome", "--allow-no-sex"])
+                      Module.callMain(["--bfile", "plink", "--maf", "0.05", "--mind", "0.1", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2", "--allow-no-sex"])
+                      Module.callMain(["--bfile", "plink", "--maf", "0.05", "--mind", "0.1", "--covar", "plink.mds", "--covar-name", "C1,C2", "--linear", "--allow-no-sex", ])
+
+                      console.log(Module.FS.readdir('.'))
+
+                      // Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+                      console.log("performing GWAS with correction")
+                    }
+
                     if(isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))){
                       var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
                     }else if(isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))){
@@ -695,17 +622,17 @@ function isSubsetOf(subset, array) {
                 renderInput={(params) => <TextField {...params} label="Select Project Data" key={params.key} />}
                 // renderInput={(params) => <TextField {...params} label="Select Project Data" />}
                 onInputChange = {(e,v) => {
-                                if(tool == "GWAS" && isPublic){
+                                if(tool == "GWAS"){
                                   pGwasDataSets.map(item => {
                                     if(item.id == v){
                                       setUrl(item.url)
                                     }})
-                                }else if(tool == "VisPheno" && isPublic){
+                                }else if(tool == "VisPheno"){
                                   pPhenoDataSets.map(item => {
                                     if(item.id == v){
                                       setUrl(item.url)
                                     }})
-                                }else if(tool == "Fastp" && isPublic){
+                                }else if(tool == "Fastp"){
                                   pFastqDataSets.map(item => {
                                     if(item.id == v){
                                       setUrl(item.url)
@@ -859,7 +786,7 @@ function isSubsetOf(subset, array) {
       {tool != "GWAS" ||
         <div padding={2}> 
 
-        <Stack spacing={0}>
+        <Stack spacing={2}>
           <Item>
             <Typography variant='h5' > Genome wide Association Analysis (GWAS)</Typography> 
           </Item>
@@ -872,18 +799,32 @@ function isSubsetOf(subset, array) {
 
           <Item>
           <Typography variant='h6' > 2. Perform GWAS Analyis on you project data </Typography> 
-          <Button variant = 'contained' onClick={handleGWAS} color="primary">
-              Run gwas Tool
+          <Grid sx = {{  marginTop:2}} container columns={2} columnGap = {2}>  
+          <Button variant = 'contained' onClick={(e) => {handleGWAS(e,"without")}} color="primary">
+          Single Marker GWAS
             </Button>
 
+            <Button variant = 'contained' onClick={(e) => {handleGWAS(e,"with")}} color="primary">
+            Population-Corrected GWAS
+            </Button>
 
+          </Grid>
+
+            
           </Item>
 
           <Item>
           <Typography variant='h6' > 3. Perform GWAS Analyis on your local data </Typography> 
-          <Button variant = 'contained' onClick={handleGWAS} color="primary">
-              Run gwas Tool
+          <Grid sx = {{  marginTop:2}} container columns={2} columnGap = {2}>  
+          <Button variant = 'contained'  onClick={(e) => {handleGWAS(e,"without")}} color="primary">
+              Single Marker GWAS
             </Button>
+
+            <Button variant = 'contained'  onClick={(e) => {handleGWAS(e,"with")}} color="primary">
+            Population-Corrected GWAS
+            </Button>
+
+          </Grid>
 
          </Item>
          <Item>
@@ -938,6 +879,8 @@ function isSubsetOf(subset, array) {
      }
      {!(tool == "Fastp") | !(fastpReported) ||    
       <FastQC sx={{marginTop:10}} url = {url}></FastQC>}
+       {/* <FastQC sx={{marginTop:10}} blob = {file} url = {url}></FastQC> */}
+
 
 
     {/* /////////////////////////// PCA //////////////////////////////////////////////////////////////////////// */}

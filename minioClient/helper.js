@@ -2,7 +2,7 @@ var Minio = require("minio");
 
 
 export var minioClient = new Minio.Client({
-    endPoint: "---.--.--.---", //`${process.env.DB_HOST}`,
+    endPoint: "134.94.65.182", //`${process.env.DB_HOST}`,
     port: 9000,
     useSSL: false,
     accessKey: "minioadmin", // `${process.env.DB_USER}`,

@@ -46,7 +46,7 @@ const components = [
     component: <CardTemplate
         myImage = './gwas.jpg' 
         title = 'GWAS' 
-        description = 'Minecraft Dungeons is'/>
+        description = 'Genome Wide Association Analysis'/>
   },
 ];
 

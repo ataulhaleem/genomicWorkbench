@@ -34,6 +34,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 export default function FastQC(props) {
   const url = props.url
+  // const blob = props.blob
+
+  // console.log(blob)
 
   const [summaryBeforefiltering, setSummaryBeforeFiltering] = useState({})
   const [summaryAfterFiltering, setSummaryAfterFiltering] = useState({})
@@ -41,10 +44,15 @@ export default function FastQC(props) {
   const [keys, setKeys] = useState([])
   
   const fastp = async () => {
+
+    // try{
+      
     const CLI = await new Aioli(["fastp/0.20.1"]);
+
     await CLI.mount([
       { name: "fastqfile", url: url },
   ]);
+
     await CLI.exec("fastp -i fastqfile");
     const json = await CLI.cat("fastp.json");
     const obj = await JSON.parse(json);
@@ -52,7 +60,29 @@ export default function FastQC(props) {
     setSummaryBeforeFiltering(obj.summary.before_filtering)
     setSummaryAfterFiltering(obj.summary.after_filtering)
     setData([obj])
-    console.log(obj)
+    // console.log(obj)
+  // }catch{
+  //   console.log("the input is not a url")
+  // }try{
+  //   const CLI = await new Aioli(["fastp/0.20.1"]);
+  //   await CLI.mount([
+  //     { name: "fastqfile", blob: blob },
+  // ]);
+
+  //   await CLI.exec("fastp -i fastqfile");
+  //   const json = await CLI.cat("fastp.json");
+  //   const obj = await JSON.parse(json);
+  //   setKeys(Object.keys(obj.summary.after_filtering))
+  //   setSummaryBeforeFiltering(obj.summary.before_filtering)
+  //   setSummaryAfterFiltering(obj.summary.after_filtering)
+  //   setData([obj])
+  //   console.log(obj)
+
+  // }catch{
+  //   console.log("the input is not a blob")
+
+  // }
+
 
   }
 
