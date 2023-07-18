@@ -17,7 +17,6 @@ import TabList from '@material-ui/lab/TabList';
 import TabPanel from '@material-ui/lab/TabPanel';
 import Head from 'next/head';
 
-import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
@@ -29,9 +28,10 @@ import Stack from '@mui/material/Stack';
 import { styled } from '@mui/material/styles';
 
 
+
+
 import PlotlyPlots from './PlotlyPlots2';
 import ManhattanPlot from '../components/ManhattanPlot'
-import DataSelectionBar from './DataSelectionBar';
 import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
 import { listObjectsInFolder } from '/minioClient/helper.js'
 
@@ -44,7 +44,6 @@ import publicFastqDataSets from '/public/publicFastqDataSets'
 import FastQC from './Fastqc';
 
 
-
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
   ...theme.typography.body2,
@@ -53,16 +52,14 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-
-
 var docs = Object.values(documentation)
 var pPhenoDataSets = Object.values(publicPhenoDataSets)
 var pGwasDataSets = Object.values(publicGwasDataSets)
 var pFastqDataSets = Object.values(publicFastqDataSets)
 
-const isObjectEmpty = (objectName) => {
-  return Object.keys(objectName).length === 0
-}
+// const isObjectEmpty = (objectName) => {
+//   return Object.keys(objectName).length === 0
+// }
 
 export function Analysis(props) {
   const [value, setValue] = useState("0");
@@ -87,28 +84,32 @@ export function Analysis(props) {
   const [yLable, setYlable] = useState("")
   const [isMultiTrace, setIsMultiTrace] = useState(false)
 
+  // Manage input data
+
+  const [isPublic, setIspublic] = useState(true)
+  const [isMinioData, setIsMinioData] = useState(false)
+  const [isOwnData, setIsOwnData] = useState(false)
+
   const [state, setState] = useState({});
   const [url, setUrl] = useState('');
 
 
   const [plinkResults, setPlinkResults] = useState([]);
   const [isToggledManhattan, setPlotIsToggledManhattan] = useState(false);
-  // const [isGwasRunning, setIsGwasRunning] = useState(false);
   const [gwasOnPubData, setGwasOnPubData] = useState(false)
-
   const [mdsData, setMdsData] = useState(null)
 
-/////////////////// handle Minio data ////////////////////
+/////////////////// 1.  handle Minio data ////////////////////
 const [bucketList, setBucketList] = useState([]);
 const [chosenProject, setChosenProject]= React.useState('');
 const [chosenDataType, setchosenDataType]= React.useState('');
 const [chosenFile, setChosenFile] = React.useState('');
 const [inputFiles, setInputFiles] = React.useState([]);
-
+const [minioGwasUrls, setMinioGwasUrls] = useState({})
+const [plinkFiles, setPlinkFiles] = useState({})
+const [plinkMinioFiles, setPlinkMinioFiles] = useState([])
 
 var inputDataTypes = [ "DNAmeth", "DNAseq", "Meta", "Pheno", "Plink", "RNAseq" ];
-
-
 useEffect(() => {
   var newBuckets = []
   minioClient.listBuckets(function(err, buckets) {
@@ -135,13 +136,54 @@ const fetchObjects = async () => {
 }
 
 
-  /////////// hanlde Public Data Sets ////////////////////
+const handleMinioProjectData = () =>{
+  // console.log("The chosen file :" , chosenFile)
+  // console.log("The chosen project :" , chosenProject)
+  if(tool == "VisPheno" && isMinioData){
+    var size = 0
+    minioClient.getObject(chosenProject, chosenFile, function(err, dataStream) {
+      console.log(dataStream)
+      if (err) {
+        return console.log("There is this error fetching data",err)
+      }
+      Papa.parse(dataStream, {
+        // delimiter: ',',
+        // escapeChar: '\\',
+        header: true,
+        complete: function(results){
+            let data = results.data;
+            setData(data)
+        }
+      })
+      dataStream.on('end', function() {
+      })
+      dataStream.on('error', function(err) {
+        console.log(err)
+      })
+    })
+  }else if(tool == "GWAS" && isMinioData){
+    console.log("The chosen file :" , chosenFile)
+    console.log("The chosen project :" , chosenProject)
+    const objectsStream = minioClient.listObjectsV2(chosenProject, "Plink", true);
+    var gwasUrls = {}
+    var plinkDataInFiles = [];
+    objectsStream.on('data', (obj) => {
+      // console.log(obj.name);
+    plinkFiles[obj.name.split('.')[1]] = obj.name
+    minioClient.presignedGetObject(chosenProject, obj.name, 24*60*60, function(err, presignedUrl) {
+    if (err) return console.log(err)
+      gwasUrls[obj.name.split('.')[1]] = presignedUrl
+    })
+    });
+    setMinioGwasUrls(gwasUrls)
+    console.log(gwasUrls)
+  }
+}
+
+  /////////// 2.  hanlde Public Data Sets ////////////////////
   const [publicDataSets, setPublicDataSets] = useState([])
   const [fastpReported, setFastpReported] = useState(false)
   const [parseToggled, setParseToggled] = useState(true)
-
-
-
   const handlePublicDataSets = () => {
     var publicdataSets = [];
     if(tool=="VisPheno"){
@@ -176,9 +218,7 @@ const fetchObjects = async () => {
         const csv = Papa.parse(target.result, { header: true });
         const parsedData = csv?.data;
         setData(parsedData);
-        // console.log(data)
-
-      }else{
+      }else if(isPublic){ // This condition tells if the data is public as well the selected tool is GWAS
         const gwaData = parseQassoc(target.result, ' ');
         var filteredArray = gwaData.filter((obj) => obj['P'] !== 'NA');
         setData(filteredArray);
@@ -220,6 +260,117 @@ const fetchObjects = async () => {
   const handleGwasPublic = () => {
     setGwasOnPubData(true)
   }
+
+// Import Plink or any other dependencies here, if required
+
+// const handleMinioGWAS = () => {
+//   console.log("Performing GWAS on data stored in Minio object Storage");
+//   console.log("The Selected project is:", chosenProject);
+//   console.log("The input files are:", plinkFiles.fam, plinkFiles.bed, plinkFiles.bim);
+
+//   var fam = minioGwasUrls.fam;
+//   var bim = minioGwasUrls.bim;
+//   var bed = minioGwasUrls.bed;
+//   var plinkInputFiles = [fam, bim, bed];
+//   var fileNames = ["plink.fam", "plink.bim", "plink.bed"];
+
+//   window.Plink().then(Module => {
+//     plinkInputFiles.map((url, index) => {
+//       fetch(url)
+//         .then(response => {
+//           if (index === 2) {
+//             // Binary file (bed)
+//             return response.blob();
+//           } else {
+//             var text = response.clone().text();
+//             return text
+//           }
+//         })
+//         .then(data => {
+//           const reader = new FileReader();
+//           reader.onload = (e) => {
+//             // const fileContents = new Uint8Array(e.target.result);
+//             if (index === 2) {
+//               // Binary file (bed)
+//               const reader = new FileReader();
+//               reader.onload = (e) => {
+//                 const fileContents = e.target.result;
+//                 Module.FS_createDataFile(
+//                   "/", // folder
+//                   fileNames[index], // filename
+//                   fileContents, // content
+//                   true, // read
+//                   true // write
+//                 );
+//                 console.log(Module.FS.readdir('.'));
+//                 if (isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))) {
+//                   console.log(Module.FS.readdir('.'));
+//                   console.log("Tool is : ",tool)
+//                   console.log("This is correct data", isMinioData)
+      
+//                     if (tool == "GWAS" && isMinioData) {
+//                       Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex"]);
+//                       if (isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))) {
+//                         var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
+//                       } else if (isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))) {
+//                         var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
+//                       }
+//                       console.log(string)
+//                       const multiArray = parseQassoc(string, ' ');
+//                       var filteredArray = multiArray.filter(obj => obj['P'] !== 'NA');
+//                       setPlinkResults(filteredArray);
+//                       setPlotIsToggledManhattan(true);
+//                     } else if (tool == "PCA" && isMinioData) {
+//                       Module.callMain(["--bfile", "plink", "--genome"]);
+//                       Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"]);
+//                       // console.log("Files After", Module.FS.readdir('.'));
+//                       var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
+//                       const multiArray = parseQassoc(string, ' ');
+//                       setMdsData(multiArray);
+//                     }
+//                   }
+//                 // Rest of your code...
+//               };
+//               reader.readAsBinaryString(data);
+//             } else {
+//               // Text files (fam, bim)
+//               const fileContents = data;
+//               console.log(fileContents)
+//               Module.FS_createDataFile(
+//                 "/", // folder
+//                 fileNames[index], // filename
+//                 fileContents, // content
+//                 true, // read
+//                 true // write
+//               );
+//             }
+//           };
+//           reader.readAsBinaryString(data);
+//         })
+//         .catch(error => {
+//           console.error('Error fetching file:', error);
+//         });
+
+//     });
+//   });
+// };
+
+
+// const handleMinioGWAS = () => {
+//   console.log("Performing GWAS on data stored in Minio object Storage");
+//   console.log("The Selected project is:", chosenProject);
+//   console.log("The input files are:", plinkFiles.fam, plinkFiles.bed, plinkFiles.bim);
+
+
+//     }
+
+// Helper function to check if an array is a subset of another array
+function isSubsetOf(subset, array) {
+  return subset.every(element => array.includes(element));
+}
+
+
+ 
   const loadPlink = () => {
     const initializeModule = async () => {
       await new Promise((resolve, reject) => {
@@ -234,6 +385,7 @@ const fetchObjects = async () => {
     };
     initializeModule();
   }
+
   function isSubsetOf(set, subset) {
     for (let i = 0; i < set.length; i++) {
         if (subset.indexOf(set[i]) == -1) {
@@ -241,7 +393,8 @@ const fetchObjects = async () => {
         }
     }
     return true;
-}
+  }
+
   function parseQassoc(fileContent, delimiter) {
     const rows = fileContent.split('\n');
     const header = rows.shift().split(delimiter).filter((value) => value !== '');
@@ -263,65 +416,112 @@ const fetchObjects = async () => {
   
     return resultArray;
   }
+
   const handleGWAS = () => {
-    // setIsGwasRunning(true)
-    const files = inputFile.current.files;
-    window.Plink().then(Module => {
-      const readers = [];
-      for (let i = 0; i < files.length; i++) {
-        const reader = new FileReader();
-        readers.push(reader);
-        reader.onload = (e) => {
-          const fileContents = e.target.result;      
-          // upLoadToBrowser(files[i].name, fileContents)
-          Module.FS_createDataFile(
-          "/", // folder
-          `plink.${files[i].name.split('.')[1]}`, // filename
-          fileContents, // content
-          true, // read
-          true, // write
-          );
-          // if(tool == "MDS"){
-          //   Module.callMain(["--bfile", "plink", "--Z-genome", "--out plink"])
-          //   Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome.gz", "--cluster", "--mds-plot 2"])
 
-          // }
-          if(isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))){
-            
-            if(tool == "GWAS"){
-              Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
-              if(isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))){
-                var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
-              }else if(isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))){
-                var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
-              }
+    if(isOwnData){
+      var analysisFiles = inputFile.current.files;
+      window.Plink().then(Module => {
+        const readers = [];
+        for (let i = 0; i < analysisFiles.length; i++) {
+          const reader = new FileReader();
+          // reader.readAsBinaryString(analysisFiles[2]);
+          readers.push(reader);
+          reader.onload = () => {
+            const fileContents = reader.result;      
+            // upLoadToBrowser(files[i].name, fileContents)
+            Module.FS_createDataFile(
+            "/", // folder
+            `plink.${analysisFiles[i].name.split('.')[1]}`, // filename
+            fileContents, // content
+            true, // read
+            true, // write
+            );
+            if(isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))){
+              if(tool == "GWAS" ){
+                Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+                if(isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))){
+                  var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
+                }else if(isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))){
+                  var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
+                }
+                const multiArray = parseQassoc(string, ' ');
+                var filteredArray = multiArray.filter((obj) => obj['P'] !== 'NA');
+                setPlinkResults(filteredArray); 
+                setPlotIsToggledManhattan(true)
+            }else if(tool=="PCA" ){
+              Module.callMain(["--bfile", "plink", "--genome"])
+              Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"])
+              console.log("Files After", Module.FS.readdir('.')) 
+              var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
               const multiArray = parseQassoc(string, ' ');
-              var filteredArray = multiArray.filter((obj) => obj['P'] !== 'NA');
-              setPlinkResults(filteredArray); 
-              setPlotIsToggledManhattan(true)
-          }else if(tool=="PCA"){
-            Module.callMain(["--bfile", "plink", "--genome"])
-            Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"])
-            console.log("Files After", Module.FS.readdir('.')) 
-            var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
-            const multiArray = parseQassoc(string, ' ');
-            setMdsData(multiArray)
+              setMdsData(multiArray)
+             }
+            } 
+          };
+          reader.readAsBinaryString(analysisFiles[i]);
+        }  
+      })
+    }else if(isMinioData){
+      console.log("Reading data from your selected Minio project: ", chosenProject)
 
-            // var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
+      window.Plink().then(Module => {
+        var fam = minioGwasUrls.fam;
+        var bim = minioGwasUrls.bim;
+        var bed = minioGwasUrls.bed;
+        var plinkInputFiles = [fam, bim, bed];
+        var fileNames = ["plink.fam", "plink.bim", "plink.bed"];
+        fileNames.map((fileName, index) =>{
+          fetch(plinkInputFiles[index])
+          .then(response => response.blob())
+          .then(blob => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const fileContents = reader.result;  
+              Module.FS_createDataFile(
+                "/", // folder
+                fileName, // filename
+                fileContents, // content
+                true, // read
+                true, // write
+                ); 
+                if(isSubsetOf(["plink.bim", "plink.fam", "plink.bed"], Module.FS.readdir('.'))){
+                  if(tool == "GWAS" ){
+                    Module.callMain(["--bfile", "plink", "--assoc", "--allow-no-sex" ])
+                    if(isSubsetOf(["plink.assoc"], Module.FS.readdir('.'))){
+                      var string = new TextDecoder().decode(Module.FS.readFile('/plink.assoc'));
+                    }else if(isSubsetOf(["plink.qassoc"], Module.FS.readdir('.'))){
+                      var string = new TextDecoder().decode(Module.FS.readFile('/plink.qassoc'));
+                    }
+                    const multiArray = parseQassoc(string, ' ');
+                    var filteredArray = multiArray.filter((obj) => obj['P'] !== 'NA');
+                    setPlinkResults(filteredArray); 
+                    setPlotIsToggledManhattan(true)
+                }else if(tool=="PCA"){
+                  Module.callMain(["--bfile", "plink", "--genome"])
+                  Module.callMain(["--bfile", "plink", "--read-genome", "plink.genome", "--cluster", "--ppc", "0.0001", "--mds-plot", "2"])
+                  console.log("Files After", Module.FS.readdir('.')) 
+                  var string = new TextDecoder().decode(Module.FS.readFile('/plink.mds'));
+                  const multiArray = parseQassoc(string, ' ');
+                  setMdsData(multiArray)
+                 }
+                } 
+            };
+            reader.readAsBinaryString(blob);
+          })  
 
-          }
+        })
 
-          }
-
-          // console.log("Files After", Module.FS.readdir('.')) 
-          // console.log("This is plink res: ",plinkResults)
- 
-        };
-        reader.readAsBinaryString(files[i]);
+  
+      })
       
-      }  
 
-    })
+
+
+  
+          
+          
+    }
   }
   const handleStateChange = (event) => {
 		setState({
@@ -341,9 +541,25 @@ const fetchObjects = async () => {
     inputFile.current.click();
   };
 
-  // Existing project
+  // Existing project in Minio db
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    if(newValue == "1"){
+      setIsMinioData(true)
+      setIsOwnData(false)
+      setIspublic(false)
+      console.log("using Minio data")
+    }else if(newValue == "2"){
+      setIsMinioData(false)
+      setIsOwnData(true)
+      setIspublic(false)
+      console.log("using own data")
+    }else{
+      setIsMinioData(false)
+      setIsOwnData(false)
+      setIspublic(true)
+      console.log("using public data")
+    }
   };
 
   // Tools usage
@@ -360,11 +576,9 @@ const fetchObjects = async () => {
 
   // setting up data public data sets
   const handleFileInputChange = () => {
-
-    console.log("Numbr of files is ",inputFile.current.files.length)
+    console.log("Numbr of files used from own data is ",inputFile.current.files.length)
     const file = inputFile.current.files[0];
     const reader = new FileReader();
-
     reader.onload = (event) => {
       const blob = new Blob([event.target.result], { type: file.type });
       setFile(blob);
@@ -374,8 +588,6 @@ const fetchObjects = async () => {
       reader.readAsArrayBuffer(file);
     }
   };
-
-
 
   useEffect(() =>{
     if(selected_plot_type == 'boxplot' || selected_plot_type == "line"|| selected_plot_type == 'violin' || selected_plot_type == "raincloud" || selected_plot_type == "heatMap"){
@@ -471,11 +683,11 @@ const fetchObjects = async () => {
           <TabList onChange={handleChange} aria-label="lab API tabs example">
             <Tab label="Public Data" value="0" />
             <Tab label="Project Data" value="1" />
-            <Tab label="Own Data" value="2" />
+            <Tab label="Own Data" value="2"/>
           </TabList>
         </Box>
         {/* First tab */}
-        <TabPanel value="0">
+        <TabPanel value="0" >
             <Autocomplete
                 options={publicDataSets}      
                 sx={{ width: 500 , marginTop:3}}
@@ -483,17 +695,17 @@ const fetchObjects = async () => {
                 renderInput={(params) => <TextField {...params} label="Select Project Data" key={params.key} />}
                 // renderInput={(params) => <TextField {...params} label="Select Project Data" />}
                 onInputChange = {(e,v) => {
-                                if(tool == "GWAS"){
+                                if(tool == "GWAS" && isPublic){
                                   pGwasDataSets.map(item => {
                                     if(item.id == v){
                                       setUrl(item.url)
                                     }})
-                                }else if(tool == "VisPheno"){
+                                }else if(tool == "VisPheno" && isPublic){
                                   pPhenoDataSets.map(item => {
                                     if(item.id == v){
                                       setUrl(item.url)
                                     }})
-                                }else if(tool == "Fastp"){
+                                }else if(tool == "Fastp" && isPublic){
                                   pFastqDataSets.map(item => {
                                     if(item.id == v){
                                       setUrl(item.url)
@@ -506,11 +718,9 @@ const fetchObjects = async () => {
                             }
               />
 
-
-
         </TabPanel>
         <TabPanel value="1">
-          <Box sx={{display: 'flex', '& > :not(style)': {m: 1,width: '50%',border: 1.5, color: 'primary.main', boxShadow: 1 , padding : 0.5 }}}>
+          <Box sx={{display: 'flex', '& > :not(style)': {m: 0.5,width: '50%', color: 'primary.main', padding : 0.1 }}}> 
                 <Autocomplete
               options={bucketList}
               sx={{ width: 300 }}
@@ -527,7 +737,7 @@ const fetchObjects = async () => {
               options={inputFiles}
               sx={{ width: 300 }}
               renderInput={(params) => <TextField {...params} label="data files" />}
-              onInputChange = {(e) => setChosenFile(e.target.value)}
+              onInputChange = {(e,v) => setChosenFile(v)}
             />
             </Box>
 
@@ -546,11 +756,10 @@ const fetchObjects = async () => {
             </Grid>
           </div>
 
-          {/* third tab */}
         </TabPanel>
 
         {!parseToggled || 
-                <Button sx = {{ width: 500 , marginTop:2}} variant="outlined" onClick={handleParse} >
+                <Button sx = {{ width: 500 , marginTop:2}} variant="constained" onClick={() =>{handleParse();handleMinioProjectData()}} >
                 <b>Parse</b>
           </Button>
 
@@ -656,14 +865,14 @@ const fetchObjects = async () => {
           </Item>
           <Item>
             <Typography variant='h6' > 1. PUBLIC DATA: Explore legacy GWAS data sets </Typography> 
-            <Button variant = 'contained' onClick={() => {handleGwasPublic();}} color="primary">
+            <Button variant = 'contained' onClick={handleGwasPublic} color="primary">
                   run gwas TOOL
             </Button>
           </Item>
 
           <Item>
           <Typography variant='h6' > 2. Perform GWAS Analyis on you project data </Typography> 
-          <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
+          <Button variant = 'contained' onClick={handleGWAS} color="primary">
               Run gwas Tool
             </Button>
 
@@ -672,7 +881,7 @@ const fetchObjects = async () => {
 
           <Item>
           <Typography variant='h6' > 3. Perform GWAS Analyis on your local data </Typography> 
-          <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
+          <Button variant = 'contained' onClick={handleGWAS} color="primary">
               Run gwas Tool
             </Button>
 
@@ -735,7 +944,7 @@ const fetchObjects = async () => {
     {tool != "PCA" ||
               <div padding={2}> 
                 <Typography variant='h5' > Population Stratification Scaling Analysis</Typography> 
-                <Button variant = 'contained' onClick={() => {handleGWAS();}} color="primary">
+                <Button variant = 'contained' onClick={handleGWAS} color="primary">
                             perform MDS
                           </Button>
                 {!mdsData ||                         

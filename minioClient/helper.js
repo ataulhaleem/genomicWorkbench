@@ -1,7 +1,7 @@
 var Minio = require("minio");
 
 export var minioClient = new Minio.Client({
-    endPoint: 'localhost',
+    endPoint: '134.94.65.182',
     port: 9000,
     useSSL: false,
     accessKey: 'minioadmin',
@@ -53,7 +53,7 @@ export function listObjectsInFolder(bucketName, folderName) {
   const objectsStream = minioClient.listObjectsV2(bucketName, folderName, true);
 
   objectsStream.on('data', (obj) => {
-    objectsList.push(obj);
+    objectsList.push(obj.name);
   });
 
   objectsStream.on('error', (err) => {
@@ -61,9 +61,8 @@ export function listObjectsInFolder(bucketName, folderName) {
   });
 
   objectsStream.on('end', () => {
-    console.log('read successfully');
+    console.log('this storage object is read successfully until the end');
   });
-
   return objectsList
 
 }
