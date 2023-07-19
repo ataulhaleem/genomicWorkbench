@@ -1,8 +1,6 @@
 import React from 'react'
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
 import CardTemplate from './CardTemplate';
-import { Button } from '@mui/material';
 
 
 export function Tools() {
@@ -47,10 +45,6 @@ export function Tools() {
         myImage = './fastp.png' 
         title = 'Fastp' 
         description = 'Analyze sequencing qualitly of FastQ data'/>
-  
-
-
-
     </Box>
     </>
   );

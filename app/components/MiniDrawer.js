@@ -22,7 +22,6 @@ import ListItemText from '@mui/material/ListItemText';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import StorageIcon from '@mui/icons-material/Storage';
-import InsightsIcon from '@mui/icons-material/Insights';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import EmailIcon from '@mui/icons-material/Email';
 import { Documentation } from './Documentation';
@@ -31,7 +30,7 @@ import { Tools } from './Tools';
 import { FAQs } from './FAQs';
 import { Contact } from './Contact';
 import { UserContext } from './contexts';
-import { useContext } from 'react';
+import { useState, useContext } from 'react';
 import  WelcomePage  from "./WelcomePage";
 
 const drawerWidth = 240;
@@ -106,11 +105,9 @@ export function MiniDrawer() {
 
   const homePage = <WelcomePage/>;
   const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
-  const [content, setContent] = React.useState(homePage);
-  const [appBarTitle, setAppBarTitle] = React.useState("Genomics data Analysis workbench");
-
-  const newContent = useContext(UserContext);
+  const [open, setOpen] = useState(false);
+  const [content, setContent] = useState(homePage);
+  const [appBarTitle, setAppBarTitle] = useState("Genomics data Analysis workbench");
   
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -133,7 +130,6 @@ export function MiniDrawer() {
       var newContent = <Contact/>;
     }else if(text== 'Home'){
       var newContent = <WelcomePage/>;
-
     } 
   setContent(newContent);
 }
@@ -154,8 +150,6 @@ export function MiniDrawer() {
     }
     setAppBarTitle(newAppBarTitle);
   }
-
-
 
 
 
@@ -225,14 +219,9 @@ export function MiniDrawer() {
         <DrawerHeader/>
         { content }
         </Box>
+
       </UserContext.Provider>
     </Box>
-
-
-    
-
-
-
 
 
     </>

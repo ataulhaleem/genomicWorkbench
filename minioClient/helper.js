@@ -11,16 +11,15 @@ export var minioClient = new Minio.Client({
 
 
 export function createProject(projectName, metadata){
-    minioClient.makeBucket(projectName, 'us-east-1', function(err) {
+    minioClient.makeBucket(projectName, projectName, function(err) {
     if (err) return console.log('Error creating bucket.', err)
-      alert('Project created successfully in "us-east-1".')
     })
-    minioClient.putObject(projectName, "RNAseq/", "",metadata);
-    minioClient.putObject(projectName, "DNAseq/", "",metadata);
-    minioClient.putObject(projectName, "DNAmeth/", "",metadata);
-    minioClient.putObject(projectName, "Meta/", "",metadata);
-    minioClient.putObject(projectName, "Pheno/", "",metadata);
-    minioClient.putObject(projectName, "Plink/", "",metadata);
+    // minioClient.putObject(projectName, "RNAseq/", "",metadata);
+    // minioClient.putObject(projectName, "DNAseq/", "",metadata);
+    // minioClient.putObject(projectName, "DNAmeth/", "",metadata);
+    // minioClient.putObject(projectName, "Meta/", "",metadata);
+    // minioClient.putObject(projectName, "Pheno/", "",metadata);
+    // minioClient.putObject(projectName, "Plink/", "",metadata);
   
   
   }

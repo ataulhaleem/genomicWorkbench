@@ -77,8 +77,8 @@ const PlotlyPlots = (props) => {
             var plotLayout = primaryLaout;
             plotLayout['xaxis'] = {}
             plotLayout['yaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
-            plotLayout.yaxis['title'] = yLable
+            plotLayout.xaxis['title'] = xLable || x
+            plotLayout.yaxis['title'] = yLable || y
             plotLayout['boxmode'] = 'group'
             plotLayout.showlegend = false
 
@@ -106,17 +106,17 @@ const PlotlyPlots = (props) => {
             var plotLayout = primaryLaout;
             plotLayout['xaxis'] = {}
             plotLayout['yaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
-            plotLayout.yaxis['title'] = yLable
-            console.log('modify it for many variables')
+            plotLayout.xaxis['title'] = xLable || x
+            plotLayout.yaxis['title'] = yLable || y
+            // console.log('modify it for many variables')
     
         }else if(plotyType == 'histogram' ){
             var plotData=[{type : 'histogram', x:xdata} ];
             var plotLayout = primaryLaout;
             plotLayout['xaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
+            plotLayout.xaxis['title'] = xLable || x
             plotLayout['yaxis'] = {}
-            plotLayout.yaxis['title'] = yLable
+            plotLayout.yaxis['title'] = yLable || y
             plotLayout.showlegend = false
 
 
@@ -125,8 +125,8 @@ const PlotlyPlots = (props) => {
                 var plotLayout = primaryLaout;
                 plotLayout['xaxis'] = {}
                 plotLayout['yaxis'] = {}
-                plotLayout.xaxis['title'] = xLable
-                plotLayout.yaxis['title'] = yLable
+                plotLayout.xaxis['title'] = xLable || x
+                plotLayout.yaxis['title'] = yLable  || y
                 // plotLayout.showlegend = false
     
         }else if(plotyType == 'boxplot' ){
@@ -147,8 +147,8 @@ const PlotlyPlots = (props) => {
             var plotLayout = primaryLaout;
             plotLayout['xaxis'] = {}
             plotLayout['yaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
-            plotLayout.yaxis['title'] = yLable
+            plotLayout.xaxis['title'] = xLable || x
+            plotLayout.yaxis['title'] = yLable || y
             plotLayout.showlegend = true
     
         }else if(plotyType == 'violin' ){
@@ -178,8 +178,8 @@ const PlotlyPlots = (props) => {
             var plotLayout = primaryLaout;
             plotLayout['xaxis'] = {}
             plotLayout['yaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
-            plotLayout.yaxis['title'] = yLable
+            plotLayout.xaxis['title'] = xLable || x
+            plotLayout.yaxis['title'] = yLable || y
             plotLayout.showlegend = true
 
     
@@ -256,8 +256,8 @@ const PlotlyPlots = (props) => {
 
             plotLayout['xaxis'] = {}
             plotLayout['yaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
-            plotLayout.yaxis['title'] = yLable
+            plotLayout.xaxis['title'] = xLable || x
+            plotLayout.yaxis['title'] = yLable || y
             plotLayout.showlegend = true
 
 
@@ -267,9 +267,11 @@ const PlotlyPlots = (props) => {
             var plotLayout = primaryLaout;
             plotLayout['xaxis'] = {}
             plotLayout['yaxis'] = {}
-            plotLayout.xaxis['title'] = xLable
-            plotLayout.yaxis['title'] = yLable
-            plotLayout.showlegend = true
+
+            plotLayout.xaxis['title'] = xLable || x
+            plotLayout.yaxis['title'] = yLable  || y
+            plotLayout.showlegend = false
+
     
         } else if(plotyType == 'heatMap'){
     
@@ -308,13 +310,13 @@ const PlotlyPlots = (props) => {
     var plotLayout = primaryLaout;
     plotLayout['xaxis'] = {}
     plotLayout['yaxis'] = {}
-    plotLayout.xaxis['title'] = xLable
-    plotLayout.yaxis['title'] = yLable
+    plotLayout.xaxis['title'] = xLable || x
+    plotLayout.yaxis['title'] = yLable  || y
     plotLayout.showlegend = false
 
 }        
     else{
-        console.log('Please choose a plot type')
+        console.log('Please choose a valid plot type')
     }
         setPlotData(plotData)
         setPlotLayout(plotLayout)

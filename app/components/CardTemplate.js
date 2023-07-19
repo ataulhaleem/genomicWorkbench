@@ -5,18 +5,13 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import { CardActionArea, CardActions } from '@mui/material';
-// import Link from 'next/link';
 import { Link } from '@mui/material';
-import { ToolsContext, UserContext } from './contexts';
+import {  UserContext } from './contexts';
 import { Analysis } from './Analysis';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 
 
 export default function CardTemplate(props) {
-  const [tool, setTool] = React.useState("");
-  const [analysisContent, setAnalysisContent] = useState(<Analysis tool = {tool}/>);
-
-
   const {content, setContent} = useContext(UserContext);
 
   return (
@@ -54,13 +49,9 @@ export default function CardTemplate(props) {
           //   setContent(newContent);
           // }}                                    
         >
-          {/* Proceed to analysis page */}
       </Link>
-      
-
       </CardActions>
     </Card>
-
     </UserContext.Provider>
 
 
