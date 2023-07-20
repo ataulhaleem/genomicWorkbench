@@ -165,7 +165,7 @@ export function Analysis (props) {
 
       if(tool == "VisPheno"){
         var dType = "Pheno/"
-      }else if(tool == "GWAS"){
+      }else if(tool == "GWAS" || tool == "PCA"){
         var dType = "Plink/"
       }
 
@@ -177,7 +177,9 @@ export function Analysis (props) {
         ''
       )
       stream.on('data', function (obj) {
-          objectsList.push(obj.name.split('/')[1].split('.')[0])
+        if(!(objectsList.includes(obj.name.split('/')[1].split('.')[0]))){
+            objectsList.push(obj.name.split('/')[1].split('.')[0])
+        }
       })
       stream.on('error', function (err) {
         console.log(err)
@@ -217,9 +219,9 @@ export function Analysis (props) {
           })
         }
       )
-    } else if (tool == 'GWAS' && isMinioData) {
-      console.log('The chosen file :', chosenFile)
+    } else if (tool == 'GWAS' && isMinioData || tool == 'PCA' && isMinioData ) {
       console.log('The chosen project :', chosenProject)
+      console.log('The chosen data set :', chosenFile)
       const objectsStream = minioClient.listObjectsV2(
         chosenProject,
         'Plink',
@@ -241,7 +243,7 @@ export function Analysis (props) {
         }
         setMinioGwasUrls(gwasUrls)
       })
-      console.log(gwasUrls)
+      // console.log(gwasUrls)
     } else if (tool == 'Fastp') {
       console.log('This is under construction')
       // minioClient.presignedGetObject(chosenProject, chosenFile, 24*60*60, function(err, presignedUrl) {
@@ -334,6 +336,8 @@ export function Analysis (props) {
   }, [tool, url])
 
   // perform GWAS
+
+
 
   const handleGwasPublic = () => {
     setGwasOnPubData(true)
@@ -484,7 +488,17 @@ export function Analysis (props) {
                 var filteredArray = multiArray.filter(obj => obj['P'] !== 'NA')
                 setPlinkResults(filteredArray)
                 setPlotIsToggledManhattan(true)
+
+                Module.FS.readdir('.').map(fileName => {
+                  if(!fileName.search('plink')){
+                    Module.FS.unlink(fileName)
+                    console.log('Cleaning VFS: Removed', fileName)
+            
+                  }})
+
+                
               } else if (tool == 'PCA') {
+                console.log("This is PCA")
                 Module.callMain(['--bfile', 'plink', '--genome'])
                 Module.callMain([
                   '--bfile',
@@ -497,12 +511,19 @@ export function Analysis (props) {
                   '--mds-plot',
                   '2'
                 ])
-                console.log('Files After', Module.FS.readdir('.'))
+                console.log('Files After Analysis', Module.FS.readdir('.'))
                 var string = new TextDecoder().decode(
                   Module.FS.readFile('/plink.mds')
                 )
                 const multiArray = parseQassoc(string, ' ')
                 setMdsData(multiArray)
+                Module.FS.readdir('.').map(fileName => {
+                  if(!fileName.search('plink')){
+                    Module.FS.unlink(fileName)
+                    console.log('Cleaning VFS: Removed', fileName)
+            
+                  }})
+
               }
             }
           }
@@ -510,10 +531,9 @@ export function Analysis (props) {
         }
       })
     } else if (isMinioData) {
-      console.log(
-        'Reading data from your selected Minio project: ',
-        chosenProject
-      )
+      console.log(        'Reading data from your selected Minio project: ',        chosenProject      )
+      console.log(        'You are Running: ',        tool      )
+
       window.Plink().then(Module => {
         var fam = minioGwasUrls.fam
         var bim = minioGwasUrls.bim
@@ -534,13 +554,9 @@ export function Analysis (props) {
                   true, // read
                   true // write
                 )
-                if (
-                  isSubsetOf(
-                    ['plink.bim', 'plink.fam', 'plink.bed'],
-                    Module.FS.readdir('.')
-                  )
-                ) {
+                if (isSubsetOf(['plink.bim', 'plink.fam', 'plink.bed'],Module.FS.readdir('.'))) {
                   if (tool == 'GWAS') {
+
                     if (v == 'without') {
                       console.log('performing GWAS with out correction')
                       Module.callMain([
@@ -553,6 +569,7 @@ export function Analysis (props) {
                         '--assoc',
                         '--allow-no-sex'
                       ])
+                    console.log('Files After Analysis', Module.FS.readdir('.'))
                     } else {
                       Module.callMain([
                         '--bfile',
@@ -592,10 +609,9 @@ export function Analysis (props) {
                         '--linear',
                         '--allow-no-sex'
                       ])
-                      console.log(Module.FS.readdir('.'))
                       console.log('performing GWAS with correction')
+                      console.log('Files After Analysis', Module.FS.readdir('.'))
                     }
-
                     if (isSubsetOf(['plink.assoc'], Module.FS.readdir('.'))) {
                       var string = new TextDecoder().decode(
                         Module.FS.readFile('/plink.assoc')
@@ -613,8 +629,17 @@ export function Analysis (props) {
                     )
                     setPlinkResults(filteredArray)
                     setPlotIsToggledManhattan(true)
+
+                    Module.FS.readdir('.').map(fileName => {
+                      if(!fileName.search('plink')){
+                        Module.FS.unlink(fileName)
+                        console.log('Cleaning VFS: Removed', fileName)
+                
+                      }})
+
                   } else if (tool == 'PCA') {
                     Module.callMain(['--bfile', 'plink', '--genome'])
+                    console.log('Files After', Module.FS.readdir('.'))
                     Module.callMain([
                       '--bfile',
                       'plink',
@@ -626,12 +651,19 @@ export function Analysis (props) {
                       '--mds-plot',
                       '2'
                     ])
-                    console.log('Files After', Module.FS.readdir('.'))
-                    var string = new TextDecoder().decode(
+                    console.log('Files After Analysis', Module.FS.readdir('.'))
+                  var string = new TextDecoder().decode(
                       Module.FS.readFile('/plink.mds')
                     )
                     const multiArray = parseQassoc(string, ' ')
                     setMdsData(multiArray)
+                    Module.FS.readdir('.').map(fileName => {
+                      if(!fileName.search('plink')){
+                        Module.FS.unlink(fileName)
+                        console.log('Cleaning VFS: Removed', fileName)
+                
+                      }})
+  
                   }
                 }
               }
@@ -764,7 +796,12 @@ export function Analysis (props) {
               </TabList>
             </Box>
             {/* First tab */}
+            
+            
             <TabPanel value='0'>
+            { !(tool == 'PCA')  ?
+            
+
               <Autocomplete
                 options={publicDataSets}
                 sx={{ width: 500, marginTop: 3 }}
@@ -797,8 +834,13 @@ export function Analysis (props) {
                     })
                   }
                 }}
-              />
+              />             :
+              console.log("")
+            }
+
             </TabPanel>
+            
+
             <TabPanel value='1'>
               <Box
                 sx={{
@@ -859,7 +901,8 @@ export function Analysis (props) {
               </div>
             </TabPanel>
 
-            {!parseToggled || (
+            {!parseToggled || !(tool == 'PCA' && isPublic) ?  
+            
               <Button
                 sx={{ width: 500, marginTop: 2 }}
                 variant='constained'
@@ -870,7 +913,10 @@ export function Analysis (props) {
               >
                 <b>Parse</b>
               </Button>
-            )}
+              :
+              <h6>Select PROJECT DATA or OWN DATA tabs</h6>
+            
+            }
           </TabContext>
         </Box>
       </Box>

@@ -11,6 +11,7 @@ import { Autocomplete, Button, Input, InputBase } from '@mui/material';
 import { TextField } from '@mui/material';
 import { minioClient, createProject, getMetadata,uploadFile } from '/minioClient/helper.js'
 import Paper from '@mui/material/Paper';
+import { useRef } from 'react';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -45,6 +46,41 @@ function a11yProps(index) {
   };
 }
 
+function arrayBufferToBuffer(arrayBuffer) {
+  return Buffer.from(arrayBuffer);
+}
+
+async function streamToBuffer(readableStream) {
+  const reader = readableStream.getReader();
+  const chunks = [];
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      if (value) {
+        chunks.push(value);
+      }
+    }
+
+    const totalLength = chunks.reduce((total, chunk) => total + chunk.length, 0);
+    const buffer = Buffer.concat(chunks, totalLength);
+
+    return buffer;
+  } catch (error) {
+    throw new Error('Error reading file as buffer.');
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+
+
+
 export default function FullWidthTabs(props) {
   const theme = useTheme();
   const [value, setValue] = React.useState(0);
@@ -57,7 +93,7 @@ export default function FullWidthTabs(props) {
   const [publication, setPublication] = React.useState('');
   const [misc, setMisc] = React.useState('');
   const [subdir, setSubdir] = React.useState('');
-  const [fileName, setFileName] = React.useState('');
+  const inputFile = useRef(null)
 
   // Existing project
   const [selectedProj, setSelectedProj] = React.useState('');
@@ -84,24 +120,54 @@ export default function FullWidthTabs(props) {
     createProject(newProjName, meta);
     alert(`Project "${newProjName}" created successfully`)
   }
-  const handleUpload = () => {
-    var objFileName = subdir + '/' + fileName.split('\\').slice(-1);
-    minioClient.putObject(selectedProj, objFileName, fileName, function(err, res) {
-      if (err) return console.log('err:', err)
-      console.log('File uploaded successfully:', res)
-    })
 
- }
   const hadleSetMetaData = (projectName) => {
-    // gets the meta data of existing projects
-    // console.log(projectName);
     var stream = minioClient.extensions.listObjectsV2WithMetadata(projectName,'', true,'')
     stream.on('data', function(obj) { 
       setMetadata(obj.metadata)
-      // console.log(obj.name, obj.lastModified, obj.lastModified, obj.metadata)
      } )
 
   }
+
+  const handleButtonClick = () => {
+    inputFile.current.click();
+  };
+
+  const handleFileInputChange = async () => {
+    const files = inputFile.current.files;
+  
+    for (const file of files) {
+      const fileName = file.name;
+      const isBinaryFile = fileName.search('bed') !== -1;
+  
+      if (!isBinaryFile) {
+        const reader = new FileReader();
+  
+        reader.onload = async (event) => {
+          const text = event.target.result;
+          console.log(`${subdir}/${fileName}`);
+          uploadFile(selectedProj, `${subdir}/${fileName}`, text);
+        };
+  
+        if (file) {
+          reader.readAsText(file); // Use readAsText for text files
+        }
+      } else {
+        const stream = await file.stream();
+        const buffer = await streamToBuffer(stream);
+        console.log(buffer);
+        uploadFile(selectedProj, `${subdir}/${fileName}`, buffer);
+      }
+    }
+
+    alert('Files uploaded successfully')
+  };
+  
+  
+
+  
+
+  
 
   return (
     <Box sx={{ bgcolor: 'background.paper' }}>
@@ -174,13 +240,6 @@ export default function FullWidthTabs(props) {
         </TabPanel>
         
 
-
-
-
-
-
-
-
       {/* Second tab */}
         <TabPanel value={value} index={1} dir={theme.direction}>
         <Typography variant = 'h4'> Existing Projects</Typography>
@@ -229,9 +288,12 @@ export default function FullWidthTabs(props) {
             sx={{ width: 500 }}
             renderInput={(listItems) => <TextField {...listItems} label = 'Choose data type'/> }							
           />
-          <TextField helperText = 'Choose one or multiple files for uploading to the database' type="file" onChange={(e) => {setFileName(e.target.value)}} />
-     
-          <Button variant = 'contained'  onClick={handleUpload} >Upload</Button>
+          <Button onClick={handleButtonClick} variant="outlined" sx={{ width: 500, marginLeft:1, padding:1 }}>
+          Select own data 
+          <input type="file" ref = {inputFile} id="file" style = { {display : 'none'}} onChange={handleFileInputChange} multiple/>
+
+          </Button>
+
           </Box>
         </Paper> 
       </Box>

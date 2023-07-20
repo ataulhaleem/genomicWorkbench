@@ -14,15 +14,37 @@ export function createProject(projectName, metadata){
     minioClient.makeBucket(projectName, projectName, function(err) {
     if (err) return console.log('Error creating bucket.', err)
     })
-    // minioClient.putObject(projectName, "RNAseq/", "",metadata);
-    // minioClient.putObject(projectName, "DNAseq/", "",metadata);
-    // minioClient.putObject(projectName, "DNAmeth/", "",metadata);
-    // minioClient.putObject(projectName, "Meta/", "",metadata);
-    // minioClient.putObject(projectName, "Pheno/", "",metadata);
-    // minioClient.putObject(projectName, "Plink/", "",metadata);
-  
-  
+    minioClient.putObject(projectName, "RNAseq/", "",metadata);
+    minioClient.putObject(projectName, "DNAseq/", "",metadata);
+    minioClient.putObject(projectName, "DNAmeth/", "",metadata);
+    minioClient.putObject(projectName, "Meta/", "",metadata);
+    minioClient.putObject(projectName, "Pheno/", "",metadata);
+    minioClient.putObject(projectName, "Plink/", "",metadata);
   }
+
+
+
+  // function uploadFile(projectName, prefix) {
+  //   minioClient.putObject(projectName, `${prefix}/`, Buffer.from(''), 0, 'application/x-directory', metadata, function (err, etag) {
+  //     if (err) {
+  //       return console.log(`Error creating object with prefix "${prefix}":`, err);
+  //     }
+  //     console.log(`Object with prefix "${prefix}" created successfully!`);
+  //   });
+  // }
+
+
+
+  export function uploadFile(projectName, dType, buffer){
+
+    try {
+      minioClient.putObject(projectName, dType, buffer); // Replace 'us-east-1' with your preferred region
+    } catch (err) {
+      console.error('Error creating bucket:', err);
+    }
+  }
+
+  
 
 
 
@@ -37,15 +59,15 @@ export function createProject(projectName, metadata){
 // }
 
 
-  export function uploadFile(projectName, fileName, filePath, metadata){
-    var destinationPath = projectName + datatype  
-    minioClient.fPutObject(destinationPath, fileName, file, filePath, metadata, function(err, objInfo) {
-        if(err) {
-            return console.log(err)
-        }
-        console.log("Success", objInfo.etag, objInfo.versionId)
-    })
-  }
+  // export function uploadFile(projectName, datatype, fileName, filePath, metadata){
+  //   var destinationPath = projectName
+  //   minioClient.fPutObject(destinationPath, fileName, filePath, metadata, function(err, objInfo) {
+  //       if(err) {
+  //           return console.log(err)
+  //       }
+  //       console.log("Success", objInfo.etag, objInfo.versionId)
+  //   })
+  // }
 
 
 export function listObjectsInFolder(bucketName, folderName) {
