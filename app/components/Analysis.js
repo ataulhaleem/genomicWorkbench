@@ -28,7 +28,11 @@ import { styled } from '@mui/material/styles'
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import PlotlyPlots from './PlotlyPlots2'
+import MenuItem from '@mui/material/MenuItem';
+import { FormControl, InputLabel, Select } from '@mui/material';
+
 import ManhattanPlot from '../components/ManhattanPlot'
+import Mapman from './Mapman'
 import { minioClient } from '/minioClient/helper.js'
 
 import publicPhenoDataSets from '/public/publicPhenoDataSets.json'
@@ -50,9 +54,6 @@ var pPhenoDataSets = Object.values(publicPhenoDataSets)
 var pGwasDataSets = Object.values(publicGwasDataSets)
 var pFastqDataSets = Object.values(publicFastqDataSets)
 
-// const isObjectEmpty = (objectName) => {
-//   return Object.keys(objectName).length === 0
-// }
 
 export function Analysis (props) {
   const tool = props.tool
@@ -103,11 +104,20 @@ export function Analysis (props) {
   const [open, setOpen] = useState(false)
   const [isToggled, setPlotIsToggled] = useState(false)
   const [plotSchema, setPlotSchema] = useState({})
+  const [isNewSchema, setIsNewSchema] = useState(0)
+  const [filteredData, setFilteredData] = useState([])
+
   const [plotTitle, setPlotTitle] = useState('')
   const [xLable, setXlable] = useState('')
   const [yLable, setYlable] = useState('')
   const [isMultiTrace, setIsMultiTrace] = useState(false)
   const [state, setState] = useState({})
+
+  const [filters, setFilters] = useState([
+    { key: '', comparison: '', value: '', logicalOperator: '' },
+  ]);
+
+  
 
   // Fastp
   const [isFastqProcessed, setFastqProcessed] = useState(false)
@@ -123,7 +133,6 @@ export function Analysis (props) {
   }
 
   // handle Minio data
-  var inputDataTypes = ['DNAmeth', 'DNAseq', 'Meta', 'Pheno', 'Plink', 'RNAseq']
   const handleChange = (event, newValue) => {
     setValue(newValue)
     if (newValue == '1') {
@@ -708,7 +717,6 @@ export function Analysis (props) {
   }, [selected_plot_type])
 
   useEffect(() => {
-    setPlotSchema(plotSchema)
     handlePLOT()
   }, [
     selectedXvar,
@@ -716,11 +724,13 @@ export function Analysis (props) {
     selected_plot_type,
     plotTitle,
     xLable,
-    yLable
+    yLable,
+    isNewSchema,
+    filteredData
   ])
 
   var handlePLOT = () => {
-    var plotSchema = {
+    var schema1 = {
       inputData: data,
       ploty_type: '',
       variablesToPlot: [],
@@ -729,32 +739,88 @@ export function Analysis (props) {
       yLable: yLable
     }
     if (selected_plot_type === 'boxplot') {
-      plotSchema.ploty_type = 'boxplot'
-      plotSchema.variablesToPlot = Object.keys(state)
+      schema1.ploty_type = 'boxplot'
+      schema1.variablesToPlot = Object.keys(state)
     } else if (selected_plot_type === 'violin') {
-      plotSchema.ploty_type = 'violin'
-      plotSchema.variablesToPlot = Object.keys(state)
+      schema1.ploty_type = 'violin'
+      schema1.variablesToPlot = Object.keys(state)
     } else if (selected_plot_type === 'line') {
-      plotSchema.ploty_type = 'line'
-      plotSchema.variablesToPlot = Object.keys(state)
+      schema1.ploty_type = 'line'
+      schema1.variablesToPlot = Object.keys(state)
     } else if (selected_plot_type === 'raincloud') {
-      plotSchema.ploty_type = 'raincloud'
-      plotSchema.variablesToPlot = Object.keys(state)
+      schema1.ploty_type = 'raincloud'
+      schema1.variablesToPlot = Object.keys(state)
     } else if (selected_plot_type === 'heatMap') {
-      plotSchema.ploty_type = 'heatMap'
-      plotSchema.variablesToPlot = Object.keys(state)
+      schema1.ploty_type = 'heatMap'
+      schema1.variablesToPlot = Object.keys(state)
     } else {
-      plotSchema.ploty_type = selected_plot_type
-      plotSchema.variablesToPlot = [selectedXvar, selectedYvar]
+      schema1.ploty_type = selected_plot_type
+      schema1.variablesToPlot = [selectedXvar, selectedYvar]
     }
-    setPlotSchema(plotSchema)
-    // var newState = {}
-    // setState(newState)
+
+    if(isNewSchema == 0){
+    setPlotSchema(schema1)
+  }else{
+    var changedSchema = schema1;
+    changedSchema.inputData = filteredData
+    setPlotSchema(changedSchema)
   }
 
-  var handleFastp = () => {
-    setFastqProcessed(true)
   }
+
+  
+    const handleAddFilter = () => {
+      setFilters([...filters, { key: '', comparison: '', value: '', logicalOperator: 'AND' }]);
+      setFilteredData(filteredData)
+    };
+  
+    const handleRemoveFilter = (index) => {
+      setFilters((prevFilters) => prevFilters.filter((_, i) => i !== index));
+      setFilteredData(filteredData)
+    };
+  
+    const handleResetFilters = () => {
+      setFilters([{ key: '', comparison: '', value: '', logicalOperator: '' }]);
+      setFilteredData(data)  // as the plot is not taking data from filtered data, so set filtered data to original data
+    };
+  
+    const applyFilters = () => {
+      const filteredData = data.filter((item) => {
+        return filters.every((filter) => {
+          const { key, comparison, value, logicalOperator } = filter;
+          if (!key || !comparison || !value) {
+            return true;
+          }
+    
+          const itemValue = item[key];
+          switch (comparison) {
+            case '=':
+              return itemValue === value;
+            case '!=':
+              return itemValue !== value;
+            case '<':
+              return itemValue < value;
+            case '>':
+              return itemValue > value;
+            case '<=':
+              return itemValue <= value;
+            case '>=':
+              return itemValue >= value;
+            default:
+              return true;
+          }
+        });
+      });
+      setFilteredData(filteredData)
+      setIsNewSchema(+1)
+      // console.log(filteredData)
+
+    };
+
+
+    // MapMan
+    const [svgUrl, setSvgURL] = useState('');
+    const [mercatorData, setMerctorData] = useState({})
 
   return (
     <>
@@ -928,9 +994,122 @@ export function Analysis (props) {
         {tool != 'VisPheno' || (
           <div>
             <Stack spacing={2}>
+
+              
+                            <Item
+                            sx={{ marginTop: 0.5, border: 1, borderColor: 'lightblue' }}
+                            >
+                              <Typography variant="h5">Query Builder</Typography>
+            <Grid container spacing={2} sx={{ marginTop: 0.5}}>
+    {filters.map((filter, index) => (
+      <React.Fragment key={index}>
+        <Grid item xs={12} md={3}>
+          <Autocomplete
+            options={ col_names } // Assuming all objects have the same keys
+            value={filter.key}
+            onChange={(event, newValue) => {
+              setFilters((prevFilters) =>
+                prevFilters.map((prevFilter, i) =>
+                  i === index ? { ...prevFilter, key: newValue } : prevFilter
+                )
+              );
+            }}
+            renderInput={(params) => <TextField {...params} label="Select Key" />}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <FormControl fullWidth>
+            <InputLabel>Comparison</InputLabel>
+            <Select
+              value={filter.comparison}
+              onChange={(event) => {
+                setFilters((prevFilters) =>
+                  prevFilters.map((prevFilter, i) =>
+                    i === index ? { ...prevFilter, comparison: event.target.value } : prevFilter
+                  )
+                );
+              }}
+            >
+              <MenuItem value="=">=</MenuItem>
+              <MenuItem value="!=">≠</MenuItem>
+              <MenuItem value="<">{'<'}</MenuItem>
+              <MenuItem value=">">{'>'}</MenuItem>
+              <MenuItem value="<=">{'≤'}</MenuItem>
+              <MenuItem value=">=">{'≥'}</MenuItem>
+            </Select>
+            
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <TextField
+            value={filter.value}
+            onChange={(event) => {
+              setFilters((prevFilters) =>
+                prevFilters.map((prevFilter, i) =>
+                  i === index ? { ...prevFilter, value: event.target.value } : prevFilter
+                )
+              );
+            }}
+            label="Comparison Value"
+            fullWidth
+          />
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          {index < filters.length - 1 && (
+            <FormControl fullWidth>
+              <InputLabel>Logical Operator</InputLabel>
+              <Select
+                value={filter.logicalOperator}
+                onChange={(event) => {
+                  setFilters((prevFilters) =>
+                    prevFilters.map((prevFilter, i) =>
+                      i === index
+                        ? { ...prevFilter, logicalOperator: event.target.value }
+                        : prevFilter
+                    )
+                  );
+                }}
+              >
+                <MenuItem value="AND">AND</MenuItem>
+                <MenuItem value="OR">OR</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+
+          {index === filters.length - 1 && (
+            <Button size="large" variant="contained" onClick={handleAddFilter} fullWidth>
+              Add Filter
+            </Button>
+          )}
+
+          {filters.length > 1 && (
+            <Button size="large" variant="contained" onClick={() => handleRemoveFilter(index)} fullWidth>
+              Remove Filter
+            </Button>
+          )}
+        </Grid>
+      </React.Fragment>
+    ))}
+
+    <Grid item xs={12}>
+      <Button size="large" variant="contained" color="primary" onClick={applyFilters} fullWidth>
+        Apply Filters
+      </Button>
+      <Button size="large" variant="contained" color="secondary" onClick={handleResetFilters} fullWidth>
+        Reset Filters
+      </Button>
+    </Grid>
+  </Grid>
+
+            </Item>
+
               <Item
                 sx={{ marginTop: 0.5, border: 1, borderColor: 'lightblue' }}
               >
+                <Typography sx={{ marginTop: 0.5, marginBottom:1}} variant='h5'>Plotting Options</Typography>
                 <Grid className='top-grid' container columns={2} columnGap={2}>
                   <Autocomplete
                     options={[
@@ -1246,6 +1425,12 @@ export function Analysis (props) {
             )}
           </div>
         )}
+
+        <div>
+      <Mapman src={"./m4diagrams/X4.5_Metabolism_overview.svg"} />
+
+
+        </div>
       </div>
     </>
   )
